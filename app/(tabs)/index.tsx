@@ -1,13 +1,16 @@
 import React from "react";
 import { Image, StyleSheet, TouchableOpacity, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { SafeAreaView } from "react-native";
+
 
 export default function HomeScreen() {
   const navigation = useNavigation();
 
-  const handlePress = () => {
-    navigation.navigate("LoginScreen");
+  const handlePress = (role) => {
+    navigation.navigate("LoginScreen", { role });
   };
+  
 
   const buttons = [
     {
@@ -33,8 +36,11 @@ export default function HomeScreen() {
     { id: 5, label: "Admin", image: require("../../assets/images/admin.png") },
   ];
 
+
   return (
-    <View style={styles.background}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "rgba(16, 156, 250, 0.94)" }}>
+      <View style={styles.background}>
+      <View style={styles.background}>
       <View style={styles.logoContainer}>
         <Image
           source={require("../../assets/images/samsung_logo.png")}
@@ -87,13 +93,18 @@ export default function HomeScreen() {
         </View>
       </View>
     </View>
+      </View>
+    </SafeAreaView>
   );
+  
+
+ 
 }
 
 const styles = StyleSheet.create({
   background: {
-    flex: 1,
-    backgroundColor: "rgba(68, 49, 235, 0.94)", // Consistent background
+   
+    backgroundColor: "rgba(16, 156, 250, 0.94)", // Consistent background
     justifyContent: "center",
     alignItems: "center",
   },
@@ -117,7 +128,7 @@ const styles = StyleSheet.create({
     backgroundColor: "no",
   },
   container: {
-    backgroundColor: "rgba(68, 49, 235, 0.94)",
+    backgroundColor: "rgba(16, 156, 250, 0.94)",
     padding: 10,
     borderRadius: 10,
     width: "89%",
@@ -146,7 +157,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   button: {
-    backgroundColor: "rgba(68, 49, 235, 0.94)",
+    backgroundColor: "rgba(16, 156, 250, 0.94)",
     borderRadius: 10,
     padding: 15,
     alignItems: "center",
@@ -158,7 +169,7 @@ const styles = StyleSheet.create({
     height: 100,
   },
   buttonSmall: {
-    backgroundColor: "rgba(68, 49, 235, 0.94)",
+    backgroundColor: "rgba(16, 156, 250, 0.94)",
     borderRadius: 10,
     padding: 10,
     alignItems: "center",
