@@ -5,23 +5,32 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons"; // Icon for custom checkbox
+import { Picker } from "@react-native-picker/picker"; // Dropdown for Manager selection
 import LogoHeader from "./LogoHeader"; // Imported LogoHeader component
 
-export default function LoginScreen() {
+export default function ManagerLoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false); // Added Remember Me state
+  const [rememberMe, setRememberMe] = useState(false);
+  const [selectedManager, setSelectedManager] = useState(""); // Manager Dropdown
 
   const navigation = useNavigation();
 
   const handleLogin = () => {
     console.log("Login pressed with username:", username);
-    console.log("Remember Me:", rememberMe); // Added Remember Me log
+    console.log("Selected Manager:", selectedManager);
+    console.log("Remember Me:", rememberMe);
     navigation.navigate("HomeScreen");
+  };
+
+  const handleSignUp = () => {
+    console.log("Navigate to Sign Up screen");
+    navigation.navigate("SignUpScreen");
   };
 
   return (
@@ -33,9 +42,9 @@ export default function LoginScreen() {
 
       {/* Main Content Section */}
       <SafeAreaView style={styles.mainContainer}>
-        <View style={styles.contentContainer}>
+        <ScrollView contentContainerStyle={styles.contentContainer}>
           <Text style={styles.heading}>
-            Welcome to Samsung Magnum Customer Care
+            Welcome to Samsung Magnum Manager Portal
           </Text>
 
           <TextInput
@@ -54,6 +63,25 @@ export default function LoginScreen() {
             secureTextEntry
           />
 
+          {/* Manager Dropdown Section */}
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedManager}
+              onValueChange={(itemValue) => setSelectedManager(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item
+                label="Select Area Manager Head"
+                value=""
+                enabled={false}
+              />
+              <Picker.Item label="John Doe" value="john_doe" />
+              <Picker.Item label="Jane Smith" value="jane_smith" />
+              <Picker.Item label="Michael Johnson" value="michael_johnson" />
+              <Picker.Item label="Emily Davis" value="emily_davis" />
+            </Picker>
+          </View>
+
           {/* Remember Me Section */}
           <TouchableOpacity
             style={styles.rememberMeContainer}
@@ -70,7 +98,15 @@ export default function LoginScreen() {
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Login</Text>
           </TouchableOpacity>
-        </View>
+
+          <View style={{ width: "100%" }}>
+            <TouchableOpacity onPress={handleSignUp}>
+              <Text style={[styles.signupText, { textAlign: "right" }]}>
+                Sign Up
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
 
         {/* Footer Section */}
         <View style={styles.copyrightText}>
@@ -117,6 +153,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
 
+  pickerContainer: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    marginBottom: 15,
+  },
+
+  picker: {
+    height: 50,
+    width: "100%",
+  },
+
   rememberMeContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -147,6 +197,14 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+
+  signupText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+    fontSize: 16,
+    marginTop: 10,
   },
 
   copyrightText: {

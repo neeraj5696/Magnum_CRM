@@ -8,20 +8,20 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons"; // Icon for custom checkbox
 import LogoHeader from "./LogoHeader"; // Imported LogoHeader component
 
-export default function LoginScreen() {
+export default function ChangePasswordScreen() {
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false); // Added Remember Me state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const navigation = useNavigation();
 
-  const handleLogin = () => {
-    console.log("Login pressed with username:", username);
-    console.log("Remember Me:", rememberMe); // Added Remember Me log
-    navigation.navigate("HomeScreen");
+  const handleSubmit = () => {
+    console.log("Change Password for:", username);
+    console.log("Current Password:", currentPassword);
+    console.log("New Password:", newPassword);
+    // Implement your password change logic here
   };
 
   return (
@@ -35,7 +35,7 @@ export default function LoginScreen() {
       <SafeAreaView style={styles.mainContainer}>
         <View style={styles.contentContainer}>
           <Text style={styles.heading}>
-            Welcome to Samsung Magnum Customer Care
+            Change Your Password
           </Text>
 
           <TextInput
@@ -48,27 +48,22 @@ export default function LoginScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
+            placeholder="Current Password"
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
             secureTextEntry
           />
 
-          {/* Remember Me Section */}
-          <TouchableOpacity
-            style={styles.rememberMeContainer}
-            onPress={() => setRememberMe(!rememberMe)}
-          >
-            <MaterialIcons
-              name={rememberMe ? "check-box" : "check-box-outline-blank"}
-              size={24}
-              color="#000"
-            />
-            <Text style={styles.rememberMeText}>Remember Me</Text>
-          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="New Password"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry
+          />
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Login</Text>
+          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <Text style={styles.buttonText}>Submit</Text>
           </TouchableOpacity>
         </View>
 
@@ -115,19 +110,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 15,
     backgroundColor: "#fff",
-  },
-
-  rememberMeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    marginBottom: 15,
-  },
-
-  rememberMeText: {
-    color: "#000",
-    fontSize: 16,
-    marginLeft: 8,
   },
 
   button: {
