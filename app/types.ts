@@ -16,6 +16,8 @@ export type RootStackParamList = {
     status: string;
     dateTime: string;
   };
+  CheckInOut: { role?: string };
+  Check: undefined;
 };
 
 // Navigation prop type for useNavigation()

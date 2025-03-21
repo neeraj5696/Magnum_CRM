@@ -19,8 +19,6 @@ export default function LoginScreen() {
 
   const navigation = useNavigation<NavigationProps>(); // Correct typing for navigation
 
-
-
   const handleLogin = () => {
     console.log("Login pressed with username:", username);
     console.log("Remember Me:", rememberMe); // Added Remember Me log
@@ -28,136 +26,142 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "rgba(16, 156, 250, 0.94)" }}>
-      {/* Independent Logo Section */}
-      <SafeAreaView style={styles.logoContainer}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.background}>
         <LogoHeader />
-      </SafeAreaView>
+        <View style={styles.container}>
+          <View style={styles.contentContainer}>
+            <Text style={styles.heading}>
+              Welcome to Samsung Magnum Customer Care
+            </Text>
 
-      {/* Main Content Section */}
-      <SafeAreaView style={styles.mainContainer}>
-        <View style={styles.contentContainer}>
-          <Text style={styles.heading}>
-            Welcome to Samsung Magnum Customer Care
-          </Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-
-          {/* Remember Me Section */}
-          <TouchableOpacity
-            style={styles.rememberMeContainer}
-            onPress={() => setRememberMe(!rememberMe)}
-          >
-            <MaterialIcons
-              name={rememberMe ? "check-box" : "check-box-outline-blank"}
-              size={24}
-              color="#000"
+            <TextInput
+              style={styles.input}
+              placeholder="Username"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
             />
-            <Text style={styles.rememberMeText}>Remember Me</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+
+            {/* Remember Me Section */}
+            <TouchableOpacity
+              style={styles.rememberMeContainer}
+              onPress={() => setRememberMe(!rememberMe)}
+            >
+              <MaterialIcons
+                name={rememberMe ? "check-box" : "check-box-outline-blank"}
+                size={24}
+                color="#1a73e8"
+              />
+              <Text style={styles.rememberMeText}>Remember Me</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Footer Section */}
-        <View style={styles.copyrightText}>
-          <Text>Copyright @ Magnum Telesystem Pvt. Ltd.</Text>
-        </View>
-      </SafeAreaView>
-    </View>
+        
+      </View>
+     
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  logoContainer: {
-    alignItems: "center",
-  },
-
-  mainContainer: {
+  safeArea: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 30,
+    backgroundColor: '#f0f2f5',
+    top: 0,
   },
-
+  background: {
+    flex: 1,
+    backgroundColor: '#f0f2f5',
+    alignItems: 'center',
+  },
+  container: {
+    backgroundColor: 'white',
+    padding: 24,
+    borderRadius: 16,
+    width: '92%',
+    marginTop: 24,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    flex: 1,
+    justifyContent: 'center',
+  },
   contentContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
-
   heading: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-    color: "#fff",
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 32,
+    color: '#1a73e8',
   },
-
   input: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#ddd",
+    width: '100%',
+    borderWidth: 2,
+    borderColor: '#e8eaed',
     borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    marginBottom: 15,
-    backgroundColor: "#fff",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    backgroundColor: '#f8f9fa',
+    fontSize: 16,
   },
-
   rememberMeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    marginBottom: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 24,
   },
-
   rememberMeText: {
-    color: "#000",
+    color: '#202124',
     fontSize: 16,
-    marginLeft: 8,
+    marginLeft: 12,
   },
-
   button: {
-    backgroundColor: "#000",
-    paddingVertical: 15,
+    backgroundColor: '#1a73e8',
+    paddingVertical: 16,
     borderRadius: 12,
-    alignItems: "center",
-    width: "100%",
-    marginBottom: 15,
-    shadowColor: "#000",
+    alignItems: 'center',
+    width: '100%',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 5,
+    shadowRadius: 1.41,
   },
-
   buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-
   copyrightText: {
-    position: "absolute",
-    bottom: 10,
-    alignSelf: "center",
-    color: "#fff",
-    fontSize: 12,
-    opacity: 0.8,
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  copyrightTextStyle: {
+    color: '#5f6368',
+    fontSize: 14,
   },
 });

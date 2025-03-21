@@ -36,7 +36,9 @@ export default function RootLayout() {
         <Stack.Screen name="Managerpage" options={{ headerShown: false }} />
         <Stack.Screen name="Listofcomplaint" options={{headerShown: false, headerLeft: () => null}} />
         <Stack.Screen name="ComplaintDetails" options={{ headerShown: false }} />
-        <Stack.Screen name = "Rate"  options={{ headerShown: false }} />       
+        <Stack.Screen name = "Rate"  options={{ headerShown: false }} /> 
+        <Stack.Screen name = "CheckInOut"  options={{ headerShown: true }} /> 
+        <Stack.Screen name = "Check"  options={{ headerShown: true }} />        
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
