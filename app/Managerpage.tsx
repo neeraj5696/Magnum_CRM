@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import type { NavigationProps } from "./types"; // Import the types
 import { SafeAreaView } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons"; // Icon for custom checkbox
 import { Picker } from "@react-native-picker/picker"; // Dropdown for Manager selection
@@ -19,18 +20,18 @@ export default function ManagerLoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [selectedManager, setSelectedManager] = useState(""); // Manager Dropdown
 
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProps>(); // Correct typing for navigation
 
   const handleLogin = () => {
     console.log("Login pressed with username:", username);
     console.log("Selected Manager:", selectedManager);
     console.log("Remember Me:", rememberMe);
-    navigation.navigate("HomeScreen");
+    navigation.navigate("HomeScreen"); // Corrected
   };
 
   const handleSignUp = () => {
     console.log("Navigate to Sign Up screen");
-    navigation.navigate("SignUpScreen");
+    navigation.navigate("SignUpScreen"); // Corrected
   };
 
   return (

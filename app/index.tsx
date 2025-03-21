@@ -5,25 +5,27 @@ import {
   TouchableOpacity,
   Text,
   View,
+  GestureResponderEvent
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native";
 import LogoHeader from "./LogoHeader"; // Import the common header
+import { NavigationProps } from "./types";
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProps>();
 
-  const handlePress = (event, role) => {
+  const handlePress = (event: GestureResponderEvent, role: string) => {
     event.persist(); // Prevents event from being nullified
     navigation.navigate("LoginScreen", { role });
   };
 
-  const handlePress1 = (event, role) => {
+  const handlePress1 = (event: GestureResponderEvent, role: string) => {
     event.persist(); 
     navigation.navigate("Managerpage", { role });
   };
 
-  const handlePressAdmin = (event, role) => {
+  const handlePressAdmin = (event: GestureResponderEvent, role: string) => {
     event.persist(); 
     navigation.navigate("ChangePassword", { role });
   };

@@ -34,6 +34,9 @@ export default function RootLayout() {
         <Stack.Screen name = "LoginScreen"  options={{ headerShown: false }} />
         <Stack.Screen name= "ChangePassword" options={{ headerShown: false }} />
         <Stack.Screen name="Managerpage" options={{ headerShown: false }} />
+        <Stack.Screen name="Listofcomplaint" options={{headerShown: false, headerLeft: () => null}} />
+        <Stack.Screen name="ComplaintDetails" options={{ headerShown: false }} />
+        <Stack.Screen name = "Rate"  options={{ headerShown: false }} />       
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import type { NavigationProps } from "./types"; // Import the types
 import { SafeAreaView } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons"; // Icon for custom checkbox
 import LogoHeader from "./LogoHeader"; // Imported LogoHeader component
@@ -16,12 +17,14 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false); // Added Remember Me state
 
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProps>(); // Correct typing for navigation
+
+
 
   const handleLogin = () => {
     console.log("Login pressed with username:", username);
     console.log("Remember Me:", rememberMe); // Added Remember Me log
-    navigation.navigate("HomeScreen");
+    navigation.navigate("Listofcomplaint");
   };
 
   return (
