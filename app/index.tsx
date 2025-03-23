@@ -75,43 +75,61 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.container}>
+          {/* Manager and Area Manager */}
           <View style={styles.buttonGrid}>
-            {buttons.slice(0, 2).map((button) => (
-              <TouchableOpacity
-                key={button.id}
-                style={styles.buttonSmall}
-                onPress={(event) => handlePress(event, button.label)}
-              >
-                <Image source={button.image} style={styles.buttonImageSmall} />
-                <Text style={styles.buttonTextSmall}>{button.label}</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+              style={styles.buttonSmall}
+              onPress={(event) => handlePress1(event, "Manager")}
+            >
+              <Image source={require("./../assets/images/manager.png")} style={styles.buttonImageSmall} />
+              <Text style={styles.buttonTextSmall}>Manager</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.buttonSmall}
+              onPress={(event) => handlePress(event, "Area Manager")}
+            >
+              <Image source={require("./../assets/images/boss.png")} style={styles.buttonImageSmall} />
+              <Text style={styles.buttonTextSmall}>Area Manager</Text>
+            </TouchableOpacity>
           </View>
 
+          {/* Engineer and Partner */}
           <View style={styles.buttonGrid}>
-            {buttons.slice(2, 4).map((button) => (
-              <TouchableOpacity
-                key={button.id}
-                style={styles.buttonSmall}
-                onPress={(event) => handlePress(event, button.label)}
-              >
-                <Image source={button.image} style={styles.buttonImageSmall} />
-                <Text style={styles.buttonTextSmall}>{button.label}</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+              style={styles.buttonSmall}
+              onPress={(event) => handlePress(event, "Engineer")}
+            >
+              <Image source={require("./../assets/images/engineer.png")} style={styles.buttonImageSmall} />
+              <Text style={styles.buttonTextSmall}>Engineer</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.buttonSmall}
+              onPress={(event) => handlePress(event, "Partner")}
+            >
+              <Image source={require("./../assets/images/collaboration.png")} style={styles.buttonImageSmall} />
+              <Text style={styles.buttonTextSmall}>Partner</Text>
+            </TouchableOpacity>
           </View>
 
+          {/* Admin and Check In/Out */}
           <View style={styles.buttonGrid}>
-            {buttons.slice(4, 6).map((button) => (
-              <TouchableOpacity
-                key={button.id}
-                style={styles.buttonSmall}
-                onPress={(event) => handlePressCheckInOut(event, button.label)}
-              >
-                <Image source={button.image} style={styles.buttonImageSmall} />
-                <Text style={styles.buttonTextSmall}>{button.label}</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+              style={styles.buttonSmall}
+              onPress={(event) => handlePressAdmin(event, "Admin")}
+            >
+              <Image source={require("./../assets/images/admin.png")} style={styles.buttonImageSmall} />
+              <Text style={styles.buttonTextSmall}>Admin</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.buttonSmall}
+              onPress={(event) => handlePressCheckInOut(event, "Check In/Out")}
+            >
+              <Image source={require("../assets/images/checkinout.png")} style={styles.buttonImageSmall} />
+              <Text style={styles.buttonTextSmall}>Check In/Out</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -122,71 +140,72 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: "#f0f2f5",
   },
   background: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
-    alignItems: 'center',
+    backgroundColor: "#f0f2f5",
+    alignItems: "center",
   },
   headingContainer: {
-    width: '90%',
-    marginVertical: 24,
+    width: "90%",
+    marginVertical: 14,
     paddingVertical: 16,
-    borderTopWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: '#1a73e8',
-    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: "#1a73e8",
+    borderRadius: 14,
+    alignItems: "center",
   },
   heading: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a73e8',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#1a73e8",
+    textAlign: "center",
   },
   container: {
-    backgroundColor: 'white',
-    padding: 24,
+    backgroundColor: "white",
+    padding: 14,
     borderRadius: 16,
-    width: '92%',
-    marginTop: 24,
+    width: "92%",
+    marginTop: 14,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
   },
   buttonGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    marginTop:10,
   },
   buttonSmall: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '48%',
+    alignItems: "center",
+    justifyContent: "center",
+    width: "48%",
     height: 120,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     borderWidth: 1,
-    borderColor: '#e8eaed',
+    borderColor: "#e8eaed",
   },
   buttonImageSmall: {
     width: 48,
     height: 48,
     marginBottom: 12,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   buttonTextSmall: {
     fontSize: 18,
-    color: '#202124',
-    fontWeight: '600',
-    textAlign: 'center',
+    color: "#202124",
+    fontWeight: "600",
+    textAlign: "center",
   },
 });

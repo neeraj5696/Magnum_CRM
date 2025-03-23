@@ -10,9 +10,10 @@ import {
   Linking,
   Pressable,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useState, useRef } from "react";
+import type { RouteProp } from "@react-navigation/native";
+import React, { useState, useRef, useEffect } from "react";
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,31 +29,61 @@ type RootStackParamList = {
     status: string;
     dateTime: string;
   };
+  Listofcomplaint: { username: string; password: string };
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-const dummyData = [
-  {
-    id: "1",
-    complaintNo: "C-202503130110851",
-    clientName: "Testing demo for cloud",
-    status: "Assigned",
-    dateTime: "2025-03-13 13:08:51",
-  },
-  {
-    id: "2",
-    complaintNo: "C-202503130110925",
-    clientName: "Testing demo for cloud",
-    status: "Assigned",
-    dateTime: "2025-03-13 13:09:25",
-  }
-];
+type ListofcomplaintScreenRouteProp = RouteProp<RootStackParamList, 'Listofcomplaint'>;
 
 const ComplaineWithNavBar = () => {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<ListofcomplaintScreenRouteProp>();
+  const { username, password } = route.params || {};
   const [isExpanded, setIsExpanded] = useState(false);
   const insets = useSafeAreaInsets();
+  const [complaints, setComplaints] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchComplaints = async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', username);
+      formData.append('password', password);
+
+      const response = await fetch('https://hma.magnum.org.in/appEngglogin.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString()
+      });
+
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error('Failed to parse response:', jsonError);
+        return;
+      }
+
+      if (data?.status === 'success' && data?.data) {
+        setComplaints(data.data);
+      } else {
+        console.error('No complaint data found');
+      }
+    } catch (error) {
+      console.error('Error fetching complaints:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (username && password) {
+      fetchComplaints();
+    }
+  }, [username, password]);
 
   // PanResponder for swipe detection
   const panResponder = useRef(
@@ -91,7 +122,7 @@ const ComplaineWithNavBar = () => {
 
   const handleAboutUs = async () => {
     try {
-      const url = 'https://www.google.com';
+      const url = 'https://www.magnum.org.in';
       await Linking.openURL(url);
     } catch (error) {
       Alert.alert("Error", "Cannot open the URL");
@@ -107,32 +138,32 @@ const ComplaineWithNavBar = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: typeof dummyData[0] }) => (
+  const renderItem = ({ item }: { item: any }) => (
     <Pressable
       style={styles.card}
       onPress={() => navigation.navigate('ComplaintDetails', {
-        complaintNo: item.complaintNo,
-        clientName: item.clientName,
-        status: item.status,
-        dateTime: item.dateTime
+        complaintNo: item.S_SERVNO,
+        clientName: item.COMP_NAME,
+        status: item.S_jobstatus,
+        dateTime: item.S_SERVDT
       })}
     >
       <View style={styles.row}>
         <Text style={styles.label}>Complaint Number : </Text>
-        <Text style={styles.text}>{item.complaintNo}</Text>
+        <Text style={styles.text}>{item.S_SERVNO}</Text>
       </View>
 
       <View style={styles.row}>
         <Text style={styles.label}>Client Name : </Text>
-        <Text style={styles.grayText}>{item.clientName}</Text>
+        <Text style={styles.grayText}>{item.COMP_NAME}</Text>
       </View>
 
       <View style={styles.row}>
         <Text style={styles.label}>Status : </Text>
-        <Text style={styles.grayText}>{item.status}</Text>
+        <Text style={styles.grayText}>{item.S_jobstatus}</Text>
       </View>
 
-      <Text style={styles.datetime}>{item.dateTime}</Text>
+      <Text style={styles.datetime}>{item.S_SERVDT}</Text>
     </Pressable>
   );
 
@@ -247,10 +278,15 @@ const ComplaineWithNavBar = () => {
 
         {/* Complaint List */}
         <FlatList
-          data={dummyData}
-          keyExtractor={(item) => item.id}
+          data={complaints}
+          keyExtractor={(item) => item.S_SERVNO}
           renderItem={renderItem}
           contentContainerStyle={styles.listContainer}
+          refreshing={isLoading}
+          onRefresh={() => {
+            setIsLoading(true);
+            fetchComplaints();
+          }}
         />
       </View>
     </View>

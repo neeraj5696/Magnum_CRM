@@ -4,7 +4,7 @@ export type RootStackParamList = {
   ManagerLoginScreen: undefined;
   HomeScreen: undefined;
   SignUpScreen: undefined;
-  Listofcomplaint: undefined;
+  Listofcomplaint: { username: string; password: string };
   Rate: undefined;
   LoginScreen: { role?: string };
   Managerpage: { role?: string };
@@ -17,7 +17,10 @@ export type RootStackParamList = {
     dateTime: string;
   };
   CheckInOut: { role?: string };
-  Check: undefined;
+  Check: {
+    username: string;
+    password: string;
+  };
 };
 
 // Navigation prop type for useNavigation()

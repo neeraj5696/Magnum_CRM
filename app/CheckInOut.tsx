@@ -37,7 +37,7 @@ export default function CheckInOut() {
       formData.append('username', username);
       formData.append('password', password);
 
-      const response = await fetch('www.google.com', {
+      const response = await fetch('https://hma.magnum.org.in/appEngglogin.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -46,7 +46,7 @@ export default function CheckInOut() {
       });
   
       const responseText = await response.text();
-      console.log('Raw response:', responseText);
+     // console.log('Raw response:', responseText);
 
       let data;
       try {
@@ -61,7 +61,10 @@ export default function CheckInOut() {
         Alert.alert('Success', 'Login successful!', [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('Check'),
+            onPress: () => navigation.navigate('Check', {
+              username: username,
+              password: password
+            }),
           },
         ]);
       } else {

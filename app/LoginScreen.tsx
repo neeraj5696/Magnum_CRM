@@ -5,24 +5,75 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import type { NavigationProps } from "./types"; // Import the types
+import type { NavigationProps } from "../app/types"; // Import the types
 import { SafeAreaView } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons"; // Icon for custom checkbox
-import LogoHeader from "./LogoHeader"; // Imported LogoHeader component
+import LogoHeader from "../app/LogoHeader"; // Imported LogoHeader component
 
 export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false); // Added Remember Me state
-
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<NavigationProps>(); // Correct typing for navigation
 
-  const handleLogin = () => {
-    console.log("Login pressed with username:", username);
-    console.log("Remember Me:", rememberMe); // Added Remember Me log
-    navigation.navigate("Listofcomplaint");
+ 
+  const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert('Error', 'Please enter both username and password');
+      return;
+    }
+  
+    setIsLoading(true);
+  
+    try {
+      // Create URLSearchParams object for form data
+      const formData = new URLSearchParams();
+      formData.append('username', username);
+      formData.append('password', password);
+
+      const response = await fetch('https://hma.magnum.org.in/appEngglogin.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      });
+  
+      const responseText = await response.text();
+     // console.log('Raw response:', responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error('Failed to parse response:', jsonError);
+        Alert.alert('Error', 'Invalid server response format');
+        return;
+      }
+  
+      if (data?.status === "success") {
+        Alert.alert('Success', 'Login successful!', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Listofcomplaint', {
+              username: username,
+              password: password
+            }),
+          },
+        ]);
+      } else {
+        Alert.alert('Error', data?.message || 'Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Error', 'Network error. Please check your connection and try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -32,7 +83,7 @@ export default function LoginScreen() {
         <View style={styles.container}>
           <View style={styles.contentContainer}>
             <Text style={styles.heading}>
-              Welcome to Samsung Magnum Customer Care
+              Welcome to Magnum Customer Care
             </Text>
 
             <TextInput
@@ -99,7 +150,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
-    flex: 1,
     justifyContent: 'center',
   },
   contentContainer: {
