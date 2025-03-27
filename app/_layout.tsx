@@ -30,6 +30,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name='Onboarding' options={{headerShown: false}} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name = "LoginScreen"  options={{ headerShown: false }} />
         <Stack.Screen name= "ChangePassword" options={{ headerShown: false }} />
@@ -37,7 +38,7 @@ export default function RootLayout() {
         <Stack.Screen name="Listofcomplaint" options={{headerShown: false, headerLeft: () => null}} />
         <Stack.Screen name="ComplaintDetails" options={{ headerShown: false }} />
         <Stack.Screen name = "Rate"  options={{ headerShown: false }} /> 
-        <Stack.Screen name = "CheckInOut"  options={{ headerShown: true }} /> 
+        <Stack.Screen name = "CheckInOut"  options={{ headerShown: false }} /> 
         <Stack.Screen name = "Check"  options={{ headerShown: true }} />        
         <Stack.Screen name="+not-found" />
       </Stack>

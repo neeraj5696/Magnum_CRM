@@ -121,18 +121,21 @@ export default function ManagerLoginScreen() {
 const styles = StyleSheet.create({
   logoContainer: {
     alignItems: "center",
+    backgroundColor: "#f5f5f5",
   },
 
   mainContainer: {
     flex: 1,
     paddingHorizontal: 20,
     paddingVertical: 30,
+    backgroundColor: "#f5f5f5",
   },
 
   contentContainer: {
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
+    
   },
 
   heading: {
@@ -140,7 +143,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 20,
-    color: "#fff",
+    
   },
 
   input: {
