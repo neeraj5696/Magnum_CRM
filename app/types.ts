@@ -5,6 +5,7 @@ export type RootStackParamList = {
   HomeScreen: undefined;
   SignUpScreen: undefined;
   Listofcomplaint: { username: string; password: string };
+ 
   Rate: undefined;
   LoginScreen: { role?: string };
   Managerpage: { role?: string };
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   Check: {
     username: string;
     password: string;
+    data: undefined;
   };
 };
 

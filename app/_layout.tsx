@@ -39,7 +39,7 @@ export default function RootLayout() {
         <Stack.Screen name="ComplaintDetails" options={{ headerShown: false }} />
         <Stack.Screen name = "Rate"  options={{ headerShown: false }} /> 
         <Stack.Screen name = "CheckInOut"  options={{ headerShown: false }} /> 
-        <Stack.Screen name = "Check"  options={{ headerShown: true }} />        
+        <Stack.Screen name = "Check"  options={{ headerShown: false}} />        
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

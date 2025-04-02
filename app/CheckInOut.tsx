@@ -69,6 +69,7 @@ export default function CheckInOut() {
               navigation.navigate("Check", {
                 username: username,
                 password: password,
+                data: undefined
               }),
           },
         ]);
