@@ -25,9 +25,9 @@ export default function CheckInOut() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+   const [rememberMe, setRememberMe] = useState(false);
 
-  useEffect(() => {
+   useEffect(() => {
     const loadCredentials = async () => {
       try {
         const savedUsername = await AsyncStorage.getItem("username");
@@ -55,6 +55,7 @@ export default function CheckInOut() {
     setIsLoading(true);
 
     try {
+      // Create URLSearchParams object for form data
       const formData = new URLSearchParams();
       formData.append("username", username);
       formData.append("password", password);
@@ -71,6 +72,8 @@ export default function CheckInOut() {
       );
 
       const responseText = await response.text();
+     
+
       let data;
       try {
         data = JSON.parse(responseText);
@@ -81,16 +84,17 @@ export default function CheckInOut() {
       }
 
       if (data?.status === "success") {
-        if (rememberMe) {
-          await AsyncStorage.setItem("username", username);
+        if(rememberMe){
+          await AsyncStorage.setItem("username" ,username)
           await AsyncStorage.setItem("password", password);
           await AsyncStorage.setItem("rememberMe", "true");
-        } else {
+        } else{
+          //clear the credential if rememberme is not selected
+
           await AsyncStorage.removeItem("username");
           await AsyncStorage.removeItem("password");
-          await AsyncStorage.removeItem("rememberMe");
+          await AsyncStorage.removeItem("rememerMe")
         }
-
         Alert.alert("Success", "Login successful!", [
           {
             text: "OK",
@@ -126,7 +130,7 @@ export default function CheckInOut() {
       </View>
 
       <View style={styles.formContainer}>
-        <Text style={styles.title}>LOGIN</Text>
+        <Text style={styles.title}>LOGIN </Text>
 
         <TextInput
           style={styles.input}
@@ -146,7 +150,7 @@ export default function CheckInOut() {
           editable={!isLoading}
         />
 
-        <TouchableOpacity
+<TouchableOpacity
           style={styles.rememberMeContainer}
           onPress={() => setRememberMe(!rememberMe)}
         >
@@ -184,6 +188,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: "center",
   },
+
   formContainer: {
     backgroundColor: "white",
     marginHorizontal: 10,
@@ -235,14 +240,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  rememberMeContainer: {
+  rememberMeContainer:{
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 15,
   },
-  rememberMeText: {
+  rememberMeText:{
     marginLeft: 8,
     fontSize: 14,
     color: "#666",
-  },
+  }
 });
