@@ -5,7 +5,6 @@ export type RootStackParamList = {
   HomeScreen: undefined;
   SignUpScreen: undefined;
   Listofcomplaint: { username: string; password: string };
- 
   Rate: undefined;
   LoginScreen: { role?: string };
   Managerpage: { role?: string };
@@ -27,3 +26,9 @@ export type RootStackParamList = {
 
 // Navigation prop type for useNavigation()
 export type NavigationProps = StackNavigationProp<RootStackParamList>;
+
+// Default export to fix the warning
+export default {
+  RootStackParamList: {} as RootStackParamList,
+  NavigationProps: {} as NavigationProps,
+};

@@ -395,6 +395,10 @@ export default function Check() {
                 <Text style={styles.detailLabel}>Complaint No:</Text>{" "}
                 {selectedComplaint?.S_SERVNO}
               </Text>
+              <Text style={styles.detailText}>
+                <Text style={styles.detailLabel}>Address:</Text>{" "}
+                {selectedComplaint?.COMP_ADD1},{selectedComplaint?.COMP_ADD2}
+              </Text>
             </View>
 
             <View style={styles.modalButtons}>

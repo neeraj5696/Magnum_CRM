@@ -15,7 +15,7 @@ import type { RouteProp } from "@react-navigation/native";
 import type { RootStackParamList } from "./types";
 import { NavigationProps } from "./types";
 import LogoHeader from "./LogoHeader";
-import { MaterialIcons } from "@expo/vector-icons";
+import CheckBox from "@react-native-community/checkbox";
 
 type CheckInOutScreenRouteProp = RouteProp<RootStackParamList, "CheckInOut">;
 
@@ -25,22 +25,17 @@ export default function CheckInOut() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+   const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     const loadCredentials = async () => {
-      try {
-        const savedUsername = await AsyncStorage.getItem("username");
-        const savedPassword = await AsyncStorage.getItem("password");
-        const savedRememberMe = await AsyncStorage.getItem("rememberMe");
-        
-        if (savedRememberMe === "true") {
-          setUsername(savedUsername || "");
-          setPassword(savedPassword || "");
-          setRememberMe(true);
-        }
-      } catch (error) {
-        console.error("Error loading saved credentials:", error);
+      const savedUsername = await AsyncStorage.getItem("username");
+      const savedPassword = await AsyncStorage.getItem("password");
+      const savedRememberMe = await AsyncStorage.getItem("rememberMe");
+      if (savedRememberMe === "true") {
+        setUsername(savedUsername || "");
+        setPassword(savedPassword || "");
+        setRememberMe(true);
       }
     };
     loadCredentials();
@@ -55,6 +50,7 @@ export default function CheckInOut() {
     setIsLoading(true);
 
     try {
+      // Create URLSearchParams object for form data
       const formData = new URLSearchParams();
       formData.append("username", username);
       formData.append("password", password);
@@ -71,6 +67,8 @@ export default function CheckInOut() {
       );
 
       const responseText = await response.text();
+      // console.log('Raw response:', responseText);
+
       let data;
       try {
         data = JSON.parse(responseText);
@@ -81,16 +79,17 @@ export default function CheckInOut() {
       }
 
       if (data?.status === "success") {
-        if (rememberMe) {
-          await AsyncStorage.setItem("username", username);
+        if(rememberMe){
+          await AsyncStorage.setItem("username" ,username)
           await AsyncStorage.setItem("password", password);
           await AsyncStorage.setItem("rememberMe", "true");
-        } else {
+        } else{
+          //clear the credential if rememberme is not selected
+
           await AsyncStorage.removeItem("username");
           await AsyncStorage.removeItem("password");
-          await AsyncStorage.removeItem("rememberMe");
+          await AsyncStorage.removeItem("rememerMe")
         }
-
         Alert.alert("Success", "Login successful!", [
           {
             text: "OK",
@@ -126,7 +125,7 @@ export default function CheckInOut() {
       </View>
 
       <View style={styles.formContainer}>
-        <Text style={styles.title}>LOGIN</Text>
+        <Text style={styles.title}>LOGIN </Text>
 
         <TextInput
           style={styles.input}
@@ -146,17 +145,15 @@ export default function CheckInOut() {
           editable={!isLoading}
         />
 
-        <TouchableOpacity
-          style={styles.rememberMeContainer}
-          onPress={() => setRememberMe(!rememberMe)}
-        >
-          <MaterialIcons
-            name={rememberMe ? "check-box" : "check-box-outline-blank"}
-            size={24}
-            color="#000"
+        <View style= {styles.rememberMeContainer} >
+          
+          <CheckBox 
+          value= {rememberMe}
+          onValueChange={setRememberMe}
+         
           />
-          <Text style={styles.rememberMeText}>Remember Me</Text>
-        </TouchableOpacity>
+          <Text style={styles.rememberMeText}> Remember Me</Text>
+        </View>
 
         <TouchableOpacity
           style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
@@ -184,6 +181,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: "center",
   },
+
   formContainer: {
     backgroundColor: "white",
     marginHorizontal: 10,
@@ -235,14 +233,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  rememberMeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
+  rememberMeContainer:{
+
   },
-  rememberMeText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: "#666",
-  },
+  rememberMeText:{
+    
+  }
 });
