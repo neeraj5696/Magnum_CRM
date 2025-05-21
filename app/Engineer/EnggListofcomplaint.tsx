@@ -137,7 +137,7 @@ export default function EnggListofcomplaint() {
 
   const renderItem = ({ item }: { item: any }) => (
     <Pressable
-      style={styles.card}
+      style={[styles.card, { borderLeftWidth: 4, borderLeftColor: '#0066CC' }]}
       onPress={() =>
         navigation.navigate("Engineer/EnggComplaintDetails", {
           complaintNo: item.S_SERVNO,
@@ -154,26 +154,47 @@ export default function EnggListofcomplaint() {
       }
     >
       <View style={styles.row}>
-        <Text style={styles.label}>Complaint Number : </Text>
+        <View style={styles.labelContainer}>
+          <MaterialIcons name="receipt" size={18} color="#0066CC" style={styles.labelIcon} />
+          <Text style={styles.label}>Complaint Number : </Text>
+        </View>
         <Text style={styles.text}>{item.S_SERVNO}</Text>
       </View>
 
       <View style={styles.row}>
-        <Text style={styles.label}>Client Name : </Text>
+        <View style={styles.labelContainer}>
+          <MaterialIcons name="person" size={18} color="#0066CC" style={styles.labelIcon} />
+          <Text style={styles.label}>Client Name : </Text>
+        </View>
         <Text style={styles.grayText}>{item.COMP_NAME}</Text>
       </View>
 
       <View style={styles.row}>
-        <Text style={styles.label}>Engineer : </Text>
+        <View style={styles.labelContainer}>
+          <MaterialIcons name="engineering" size={18} color="#0066CC" style={styles.labelIcon} />
+          <Text style={styles.label}>Engineer : </Text>
+        </View>
         <Text style={styles.grayText}>{item.S_assignedengg}</Text>
       </View>
 
       <View style={styles.row}>
-        <Text style={styles.label}>Status : </Text>
-        <Text style={styles.grayText}>{item.S_jobstatus}</Text>
+        <View style={styles.labelContainer}>
+          <MaterialIcons name="info" size={18} color="#0066CC" style={styles.labelIcon} />
+          <Text style={styles.label}>Status : </Text>
+        </View>
+        <Text style={[
+          styles.grayText,
+          { 
+            color: item.S_jobstatus === 'Completed' ? '#4CAF50' : 
+                   item.S_jobstatus === 'Pending' ? '#FFA000' : '#666'
+          }
+        ]}>{item.S_jobstatus}</Text>
       </View>
 
-      <Text style={styles.datetime}>{item.S_SERVDT}</Text>
+      <View style={styles.datetimeContainer}>
+        <MaterialIcons name="access-time" size={16} color="#888" style={styles.datetimeIcon} />
+        <Text style={styles.datetime}>{item.S_SERVDT}</Text>
+      </View>
     </Pressable>
   );
 
@@ -439,38 +460,53 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    elevation: 2,
+    elevation: 3,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
+  },
+  labelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 140,
+  },
+  labelIcon: {
+    marginRight: 8,
   },
   label: {
     fontWeight: "600",
     color: "#333",
     fontSize: 14,
-    minWidth: 80,
   },
   text: {
     fontSize: 14,
     color: "#0066CC",
     flex: 1,
+    fontWeight: "500",
   },
   grayText: {
     fontSize: 14,
     color: "#555",
     flex: 1,
   },
+  datetimeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    marginTop: 8,
+  },
+  datetimeIcon: {
+    marginRight: 4,
+  },
   datetime: {
     fontSize: 12,
     color: "#888",
-    textAlign: "right",
-    marginTop: 8,
   },
   loadingContainer: {
     flex: 1,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -25,6 +26,10 @@ export default function EnggLoginScreen() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  
+  const shimmerAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const loadCredentials = async () => {
@@ -45,16 +50,35 @@ export default function EnggLoginScreen() {
     loadCredentials();
   }, []);
 
+  useEffect(() => {
+    if (loginSuccess) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerAnimation, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shimmerAnimation, {
+            toValue: 0,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [loginSuccess]);
+
   const handleLogin = async () => {
     if (!username || !password) {
-      Alert.alert("Error", "Please enter both username and password");
+      setErrorMessage("Please enter both username and password");
       return;
     }
 
     setIsLoading(true);
+    setErrorMessage("");
 
     try {
-      // Create URLSearchParams object for form data
       const formData = new URLSearchParams();
       formData.append("username", username);
       formData.append("password", password);
@@ -78,7 +102,7 @@ export default function EnggLoginScreen() {
         data = JSON.parse(responseText);
       } catch (jsonError) {
         console.error("Failed to parse response:", jsonError);
-        Alert.alert("Error", "Invalid server response format");
+        setErrorMessage("Invalid server response format");
         setIsLoading(false);
         return;
       }
@@ -89,37 +113,36 @@ export default function EnggLoginScreen() {
           await AsyncStorage.setItem("engg_password", password);
           await AsyncStorage.setItem("engg_rememberMe", "true");
         } else {
-          // Clear credentials if remember me is not selected
           await AsyncStorage.removeItem("engg_username");
           await AsyncStorage.removeItem("engg_password");
           await AsyncStorage.removeItem("engg_rememberMe");
         }
         
-        Alert.alert("Success", "Login successful!", [
-          {
-            text: "OK",
-            onPress: () =>
-              navigation.navigate("Engineer/EnggListofcomplaint", {
-                username: username,
-                password: password,
-              }),
-          },
-        ]);
+        setLoginSuccess(true);
+        setTimeout(() => {
+          navigation.navigate("Engineer/EnggListofcomplaint", {
+            username: username,
+            password: password,
+          });
+        }, 1500);
       } else {
-        Alert.alert(
-          "Error",
-          data?.message || "Login failed. Please check your credentials."
-        );
+        setErrorMessage(data?.message || "Login failed. Please check your credentials.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      Alert.alert(
-        "Error",
-        "Network error. Please check your connection and try again."
-      );
+      setErrorMessage("Network error. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const shimmerStyle = {
+    transform: [{
+      translateX: shimmerAnimation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-200, 200],
+      }),
+    }],
   };
 
   return (
@@ -131,23 +154,33 @@ export default function EnggLoginScreen() {
       <View style={styles.formContainer}>
         <Text style={styles.title}>ENGINEER LOGIN</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          autoCapitalize="none"
-          editable={!isLoading}
-        />
+        <View style={styles.inputContainer}>
+          <MaterialIcons name="person" size={20} color="#666" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!isLoading}
-        />
+        <View style={styles.inputContainer}>
+          <MaterialIcons name="lock" size={20} color="#666" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            editable={!isLoading}
+          />
+        </View>
+
+        {errorMessage ? (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
 
         <TouchableOpacity
           style={styles.rememberMeContainer}
@@ -156,22 +189,32 @@ export default function EnggLoginScreen() {
           <MaterialIcons
             name={rememberMe ? "check-box" : "check-box-outline-blank"}
             size={24}
-            color="#000"
+            color="#0066CC"
           />
           <Text style={styles.rememberMeText}>Remember Me</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-          onPress={handleLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="white" />
+        <View style={styles.buttonContainer}>
+          {loginSuccess ? (
+            <View style={styles.successContainer}>
+              <Animated.View style={[styles.shimmer, shimmerStyle]} />
+              <MaterialIcons name="check-circle" size={24} color="#4CAF50" />
+              <Text style={styles.successText}>Login Successful!</Text>
+            </View>
           ) : (
-            <Text style={styles.loginButtonText}>Login</Text>
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.loginButtonText}>Login</Text>
+              )}
+            </TouchableOpacity>
           )}
-        </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -189,10 +232,12 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     backgroundColor: "white",
-    marginHorizontal: 10,
+    marginHorizontal: 16,
     marginTop: 40,
     padding: 20,
     borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0066CC',
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -209,17 +254,31 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-  input: {
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#f9f9f9",
-    padding: 12,
     borderRadius: 8,
     marginBottom: 15,
     borderWidth: 1,
     borderColor: "#ddd",
+  },
+  inputIcon: {
+    padding: 12,
+  },
+  input: {
+    flex: 1,
+    padding: 12,
     fontSize: 16,
   },
+  errorText: {
+    color: "#FF3B30",
+    fontSize: 14,
+    marginBottom: 15,
+    textAlign: "center",
+  },
   loginButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#0066CC",
     padding: 14,
     borderRadius: 8,
     alignItems: "center",
@@ -246,5 +305,33 @@ const styles = StyleSheet.create({
   rememberMeText: {
     marginLeft: 8,
     fontSize: 14,
+    color: "#666",
+  },
+  buttonContainer: {
+    height: 50,
+  },
+  successContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E8F5E9",
+    padding: 14,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  successText: {
+    color: "#4CAF50",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  shimmer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    width: 200,
   },
 }); 
