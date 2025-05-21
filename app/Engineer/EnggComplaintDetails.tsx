@@ -18,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { RootStackParamList, NavigationProps } from '../types';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type EnggComplaintDetailsRouteProp = RouteProp<RootStackParamList, 'Engineer/EnggComplaintDetails'>;
 
@@ -33,6 +34,7 @@ export default function EnggComplaintDetails() {
   const [hasSubmitAttempt, setHasSubmitAttempt] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [statusBarHidden, setStatusBarHidden] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const subscription = ScreenOrientation.addOrientationChangeListener(({ orientationInfo }) => {
@@ -200,10 +202,10 @@ export default function EnggComplaintDetails() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom }]}>
       <StatusBar hidden={statusBarHidden} />
       <ScrollView>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight as number) + 10 + insets.top : 50 + insets.top }]}>
           <Pressable 
             onPress={() => navigation.goBack()}
             style={styles.backButton}
@@ -381,7 +383,7 @@ export default function EnggComplaintDetails() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
