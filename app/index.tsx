@@ -15,11 +15,12 @@ import { NavigationProps } from "./types";
 export default function HomeScreen() {
   const navigation = useNavigation<NavigationProps>();
 
-  const handlePress = (event: GestureResponderEvent, role: string) => {
+  const handleEngineerPress = (event: GestureResponderEvent) => {
     event.persist(); // Prevents event from being nullified
-    navigation.navigate("LoginScreen", { role });
+    navigation.navigate("Engineer/EnggLoginScreen", { role: "Engineer" });
   };
-  const handlePressCheckInOut = (
+  
+  const handleCheckInOutPress = (
     event: GestureResponderEvent,
     role: string
   ) => {
@@ -36,6 +37,31 @@ export default function HomeScreen() {
     event.persist();
     navigation.navigate("ChangePassword", { role });
   };
+
+  // New separate handlers for each button
+  const handleManagerPress = (event: GestureResponderEvent) => {
+    event.persist();
+    navigation.navigate("Managerpage", { role: "Manager" });
+  };
+
+  const handleAreaManagerPress = (event: GestureResponderEvent) => {
+    event.persist();
+    navigation.navigate("LoginScreen", { role: "Area Manager" });
+  };
+
+  
+
+  const handlePartnerPress = (event: GestureResponderEvent) => {
+    event.persist();
+    navigation.navigate("LoginScreen", { role: "Partner" });
+  };
+
+  const handleAdminPress = (event: GestureResponderEvent) => {
+    event.persist();
+    navigation.navigate("ChangePassword", { role: "Admin" });
+  };
+
+ 
 
   const buttons = [
     {
@@ -79,7 +105,7 @@ export default function HomeScreen() {
           <View style={styles.buttonGrid}>
             <TouchableOpacity
               style={styles.buttonSmall}
-              onPress={(event) => handlePress1(event, "Manager")}
+              onPress={handleManagerPress}
             >
               <Image source={require("./../assets/images/manager.png")} style={styles.buttonImageSmall} />
               <Text style={styles.buttonTextSmall}>Manager</Text>
@@ -87,7 +113,7 @@ export default function HomeScreen() {
 
             <TouchableOpacity
               style={styles.buttonSmall}
-              onPress={(event) => handlePress(event, "Area Manager")}
+              onPress={handleAreaManagerPress}
             >
               <Image source={require("./../assets/images/boss.png")} style={styles.buttonImageSmall} />
               <Text style={styles.buttonTextSmall}>Area Manager</Text>
@@ -98,7 +124,7 @@ export default function HomeScreen() {
           <View style={styles.buttonGrid}>
             <TouchableOpacity
               style={styles.buttonSmall}
-              onPress={(event) => handlePress(event, "Engineer")}
+              onPress={handleEngineerPress}
             >
               <Image source={require("./../assets/images/engineer.png")} style={styles.buttonImageSmall} />
               <Text style={styles.buttonTextSmall}>Engineer</Text>
@@ -106,7 +132,7 @@ export default function HomeScreen() {
 
             <TouchableOpacity
               style={styles.buttonSmall}
-              onPress={(event) => handlePress(event, "Partner")}
+              onPress={handlePartnerPress}
             >
               <Image source={require("./../assets/images/collaboration.png")} style={styles.buttonImageSmall} />
               <Text style={styles.buttonTextSmall}>Partner</Text>
@@ -117,7 +143,7 @@ export default function HomeScreen() {
           <View style={styles.buttonGrid}>
             <TouchableOpacity
               style={styles.buttonSmall}
-              onPress={(event) => handlePressAdmin(event, "Admin")}
+              onPress={handleAdminPress}
             >
               <Image source={require("./../assets/images/admin.png")} style={styles.buttonImageSmall} />
               <Text style={styles.buttonTextSmall}>Admin</Text>
@@ -125,7 +151,7 @@ export default function HomeScreen() {
 
             <TouchableOpacity
               style={styles.buttonSmall}
-              onPress={(event) => handlePressCheckInOut(event, "Check In/Out")}
+              onPress={(event) => handleCheckInOutPress(event, "User")}
             >
               <Image source={require("../assets/images/checkinout.png")} style={styles.buttonImageSmall} />
               <Text style={styles.buttonTextSmall}>Check In/Out</Text>

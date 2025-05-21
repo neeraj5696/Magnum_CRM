@@ -33,13 +33,22 @@ export default function RootLayout() {
         <Stack.Screen name='Onboarding' options={{headerShown: false}} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name = "LoginScreen"  options={{ headerShown: false }} />
+        <Stack.Screen name = "EnggLoginScreen"  options={{ headerShown: false }} />
         <Stack.Screen name= "ChangePassword" options={{ headerShown: false }} />
         <Stack.Screen name="Managerpage" options={{ headerShown: false }} />
         <Stack.Screen name="Listofcomplaint" options={{headerShown: false, headerLeft: () => null}} />
+        <Stack.Screen name="EnggListofcomplaint" options={{headerShown: false, headerLeft: () => null}} />
         <Stack.Screen name="ComplaintDetails" options={{ headerShown: false }} />
+        <Stack.Screen name="EnggComplaintDetails" options={{ headerShown: false }} />
         <Stack.Screen name = "Rate"  options={{ headerShown: false }} /> 
         <Stack.Screen name = "CheckInOut"  options={{ headerShown: false }} /> 
-        <Stack.Screen name = "Check"  options={{ headerShown: false}} />        
+        <Stack.Screen name = "Check"  options={{ headerShown: false}} />
+        
+        {/* Engineer routes */}
+        <Stack.Screen name = "Engineer/EnggLoginScreen" options={{ headerShown: false }} />
+        <Stack.Screen name = "Engineer/EnggListofcomplaint" options={{headerShown: false, headerLeft: () => null}} />
+        <Stack.Screen name = "Engineer/EnggComplaintDetails" options={{ headerShown: false }} />
+        
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

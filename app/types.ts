@@ -1,26 +1,68 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 
 export type RootStackParamList = {
-  ManagerLoginScreen: undefined;
+  // Manager Routes
+  ManagerLoginScreen: { role?: string };
+  Managerpage: { role?: string };
+  LoginScreen: { role?: string }; // This is needed for backward compatibility
+  
+  // Common Routes
   HomeScreen: undefined;
   SignUpScreen: undefined;
-  Listofcomplaint: { username: string; password: string };
   Rate: undefined;
-  LoginScreen: { role?: string };
-  Managerpage: { role?: string };
-  ChangePassword: { role?: string };
   index: undefined;
+  ChangePassword: { role?: string };
+  CheckInOut: { role?: string };
+  
+  // Engineer Routes
+  "Engineer/EnggLoginScreen": { role?: string };
+  "Engineer/EnggListofcomplaint": { 
+    username: string; 
+    password: string;
+  };
+  "Engineer/EnggComplaintDetails": { 
+    complaintNo: string;
+    clientName: string;
+    status: string;
+    dateTime: string;
+    Engineer:string;
+    Assign_Date: string;
+    Task_Type: string;
+    Address: string;
+    Remark: string;
+    SYSTEM_NAME:string;
+  };
+  
+  // Manager Complaint Routes
+  Listofcomplaint: { 
+    username: string; 
+    password: string;
+  };
   ComplaintDetails: { 
     complaintNo: string;
     clientName: string;
     status: string;
     dateTime: string;
   };
-  CheckInOut: { role?: string };
+  
+  // Check Routes
   Check: {
     username: string;
     password: string;
     data: undefined;
+  };
+  
+  // Legacy routes for compatibility
+  EnggLoginScreen: { role?: string };
+  EnggListofcomplaint: { 
+    username: string; 
+    password: string;
+  };
+  EnggComplaintDetails: { 
+    complaintNo: string;
+    clientName: string;
+    status: string;
+    dateTime: string;
   };
 };
 
