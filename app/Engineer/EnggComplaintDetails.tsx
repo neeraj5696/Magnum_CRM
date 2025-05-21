@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { RootStackParamList, NavigationProps } from '../types';
 
 type EnggComplaintDetailsRouteProp = RouteProp<RootStackParamList, 'Engineer/EnggComplaintDetails'>;
@@ -30,6 +31,27 @@ export default function EnggComplaintDetails() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [uploadedSignature, setUploadedSignature] = useState<string | null>(null);
   const [hasSubmitAttempt, setHasSubmitAttempt] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
+  const [statusBarHidden, setStatusBarHidden] = useState(false);
+
+  useEffect(() => {
+    const subscription = ScreenOrientation.addOrientationChangeListener(({ orientationInfo }) => {
+      if (
+        orientationInfo.orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
+        orientationInfo.orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT
+      ) {
+        setIsLandscape(true);
+        setStatusBarHidden(true);
+      } else {
+        setIsLandscape(false);
+        setStatusBarHidden(false);
+      }
+    });
+    return () => {
+      ScreenOrientation.removeOrientationChangeListener(subscription);
+      setStatusBarHidden(false);
+    };
+  }, []);
 
   // Request permissions for camera and media library
   const requestPermissions = async () => {
@@ -179,7 +201,7 @@ export default function EnggComplaintDetails() {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#000" barStyle="light-content" />
+      <StatusBar hidden={statusBarHidden} />
       <ScrollView>
         <View style={styles.header}>
           <Pressable 
@@ -190,9 +212,21 @@ export default function EnggComplaintDetails() {
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </Pressable>
           <Text style={styles.headerTitle}>Engineer Complaint Details</Text>
-          <Pressable style={styles.shareButton}>
-            <Ionicons name="share-outline" size={24} color="#fff" />
-          </Pressable>
+          <View style={{ flexDirection: 'row' }}>
+            <Pressable style={styles.shareButton}>
+              <Ionicons name="share-outline" size={24} color="#fff" />
+            </Pressable>
+            <Pressable
+              style={styles.rotateButton}
+              onPress={async () => {
+                await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+                setStatusBarHidden(true);
+              }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="sync" size={24} color="#fff" />
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.content}>
@@ -200,8 +234,7 @@ export default function EnggComplaintDetails() {
             <Text style={styles.complaintNo}>Complaint No. - {complaintNo}</Text>
           </View>
 
-          <View style={styles.infoSection}>
-        
+          <View style={styles.infoSectionBox}>
             <View style={styles.infoRow}>
               <Text style={styles.label}>Complaint Name:</Text>
               <Text style={styles.value}>{clientName}</Text>
@@ -235,7 +268,7 @@ export default function EnggComplaintDetails() {
 
           </View>
 
-          <View style={styles.formSection}>
+          <View style={styles.formSectionBox}>
             <Text style={styles.sectionTitle}>Update Status</Text>
 
             <Pressable 
@@ -377,6 +410,10 @@ const styles = StyleSheet.create({
   shareButton: {
     padding: 8,
   },
+  rotateButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
   content: {
     padding: 16,
   },
@@ -396,16 +433,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  infoSection: {
+  infoSectionBox: {
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0066CC',
     padding: 16,
     marginBottom: 16,
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   sectionTitle: {
     fontSize: 16,
@@ -426,16 +465,18 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#333',
   },
-  formSection: {
+  formSectionBox: {
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0066CC',
     padding: 16,
     marginBottom: 16,
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   formLabel: {
     fontSize: 14,
