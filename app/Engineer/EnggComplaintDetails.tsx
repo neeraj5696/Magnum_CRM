@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,151 +10,47 @@ import {
   Modal,
   Platform,
   StatusBar,
+  TouchableOpacity,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { RootStackParamList, NavigationProps } from '../types';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { generatePdfFromHtml, generateDocxFromHtml } from '../../utils/documentGenerator';
+import { createComplaintReportTemplate } from '../../utils/complaintReportTemplate';
 
 type EnggComplaintDetailsRouteProp = RouteProp<RootStackParamList, 'Engineer/EnggComplaintDetails'>;
 
 export default function EnggComplaintDetails() {
   const route = useRoute<EnggComplaintDetailsRouteProp>();
   const navigation = useNavigation<NavigationProps>();
-  const [remark, setRemark] = useState('');
   const { complaintNo, clientName } = route.params;
-  const [workStatus, setWorkStatus] = useState('');
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [uploadedSignature, setUploadedSignature] = useState<string | null>(null);
-  const [hasSubmitAttempt, setHasSubmitAttempt] = useState(false);
-  const [isLandscape, setIsLandscape] = useState(false);
-  const [statusBarHidden, setStatusBarHidden] = useState(false);
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const subscription = ScreenOrientation.addOrientationChangeListener(({ orientationInfo }) => {
-      if (
-        orientationInfo.orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
-        orientationInfo.orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT
-      ) {
-        setIsLandscape(true);
-        setStatusBarHidden(true);
-      } else {
-        setIsLandscape(false);
-        setStatusBarHidden(false);
-      }
-    });
-    return () => {
-      ScreenOrientation.removeOrientationChangeListener(subscription);
-      setStatusBarHidden(false);
-    };
-  }, []);
+  // Form field states
+  const [remark, setRemark] = useState('');
+  const [workStatus, setWorkStatus] = useState('');
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [hasSubmitAttempt, setHasSubmitAttempt] = useState(false);
+  const [documentFormat, setDocumentFormat] = useState<'pdf' | 'docx'>('pdf');
+  const [showDocFormatModal, setShowDocFormatModal] = useState(false);
 
-  // Request permissions for camera and media library
-  const requestPermissions = async () => {
-    if (Platform.OS !== 'web') {
-      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
-      const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (cameraStatus !== 'granted' || libraryStatus !== 'granted') {
-        Alert.alert('Sorry, we need camera and media library permissions to make this work!');
-        return false;
-      }
-      return true;
-    }
-    return true;
-  };
-
-  // Handle image upload from camera or gallery
-  const handleImageUpload = async (useCamera: boolean) => {
-    try {
-      if (Platform.OS === 'android') {
-        const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
-        let finalStatus = existingStatus;
-
-        if (existingStatus !== 'granted') {
-          const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-          finalStatus = status;
-        }
-
-        if (finalStatus !== 'granted') {
-          Alert.alert(
-            'Permission Required',
-            'Please grant camera roll permissions in your phone settings to upload images.'
-          );
-          return;
-        }
-
-        if (useCamera) {
-          const { status: cameraStatus } = await ImagePicker.getCameraPermissionsAsync();
-          let finalCameraStatus = cameraStatus;
-
-          if (cameraStatus !== 'granted') {
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
-            finalCameraStatus = status;
-          }
-
-          if (finalCameraStatus !== 'granted') {
-            Alert.alert(
-              'Permission Required',
-              'Please grant camera permissions in your phone settings to take photos.'
-            );
-            return;
-          }
-        }
-      }
-
-      const pickerOptions = {
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3] as [number, number],
-        quality: 1,
-      };
-
-      const result = useCamera
-        ? await ImagePicker.launchCameraAsync(pickerOptions)
-        : await ImagePicker.launchImageLibraryAsync(pickerOptions);
-
-      console.log('Image picker result:', result);
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        console.log('Selected image URI:', result.assets[0].uri);
-        setUploadedImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert(
-        'Error',
-        'Failed to access ' + (useCamera ? 'camera' : 'gallery') + '. Please try again.'
-      );
-    }
-  };
-
-  // Handle signature upload
-  const handleSignatureUpload = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['image/*', 'application/pdf'],
-        copyToCacheDirectory: true
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setUploadedSignature(result.assets[0].uri);
-        console.log('Selected signature:', result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error picking signature:', error);
-      Alert.alert('Error', 'Failed to select signature file. Please try again.');
-    }
-  };
+  // Form field states for new fields
+  const [faultReported, setFaultReported] = useState('');
+  const [typeOfCall, setTypeOfCall] = useState('');
+  const [showTypeOfCallModal, setShowTypeOfCallModal] = useState(false);
+  const [callAttendedDate, setCallAttendedDate] = useState('');
+  const [callAttendedTime, setCallAttendedTime] = useState('');
+  const [callCompletedDate, setCallCompletedDate] = useState('');
+  const [callCompletedTime, setCallCompletedTime] = useState('');
+  const [partReplaced, setPartReplaced] = useState('');
+  const [causeProblem, setCauseProblem] = useState('');
+  const [diagnosis, setDiagnosis] = useState('');
+  const [materialTakenOut, setMaterialTakenOut] = useState('');
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setHasSubmitAttempt(true);
 
     if (!workStatus) {
@@ -162,13 +58,23 @@ export default function EnggComplaintDetails() {
       return;
     }
 
-    if (!uploadedImage) {
-      Alert.alert('Error', 'Please upload an image');
+    if (!faultReported) {
+      Alert.alert('Error', 'Please enter fault reported');
       return;
     }
 
-    if (!uploadedSignature) {
-      Alert.alert('Error', 'Please upload a signature');
+    if (!typeOfCall) {
+      Alert.alert('Error', 'Please select type of call');
+      return;
+    }
+
+    if (!callAttendedDate || !callAttendedTime) {
+      Alert.alert('Error', 'Please enter call attended date and time');
+      return;
+    }
+
+    if (!callCompletedDate || !callCompletedTime) {
+      Alert.alert('Error', 'Please enter call completed date and time');
       return;
     }
 
@@ -177,18 +83,61 @@ export default function EnggComplaintDetails() {
       return;
     }
 
+    // Show format selection modal
+    setShowDocFormatModal(true);
+  };
+
+  // Handle final submission with document generation
+  const handleFinalSubmit = async () => {
     const formData = {
       complaintNo,
       clientName,
       workStatus,
       remark,
-      uploadedImage,
-      uploadedSignature,
+      faultReported,
+      typeOfCall,
+      callAttendedDate,
+      callAttendedTime,
+      callCompletedDate,
+      callCompletedTime,
+      partReplaced,
+      causeProblem,
+      diagnosis,
+      materialTakenOut,
       submittedAt: new Date().toISOString(),
+      // Add additional fields from route.params
+      systemName: route.params.SYSTEM_NAME || '',
+      assignDate: route.params.Assign_Date || '',
+      location: route.params.Address || '',
+      taskType: route.params.Task_Type || '',
+      status: route.params.status || '',
     };
 
+    // Generate document from form data with the specialized template
+    try {
+      console.log(`Generating ${documentFormat.toUpperCase()} from form data...`);
+      const htmlContent = createComplaintReportTemplate(formData);
+      const fileName = `complaint_${complaintNo}_report`;
+
+      let success = false;
+
+      if (documentFormat === 'pdf') {
+        success = await generatePdfFromHtml(htmlContent, fileName);
+      } else {
+        success = await generateDocxFromHtml(htmlContent, fileName);
+      }
+
+      if (success) {
+        console.log(`${documentFormat.toUpperCase()} generated successfully`);
+      } else {
+        console.error(`Failed to generate ${documentFormat.toUpperCase()}`);
+      }
+    } catch (error) {
+      console.error(`Error in ${documentFormat.toUpperCase()} generation:`, error);
+    }
+
     console.log('Form Data:', formData);
-    Alert.alert('Success', 'Data submitted successfully', [
+    Alert.alert('Success', `Data submitted and ${documentFormat.toUpperCase()} report generated successfully`, [
       {
         text: 'OK',
         onPress: () => {
@@ -203,10 +152,10 @@ export default function EnggComplaintDetails() {
 
   return (
     <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <StatusBar hidden={statusBarHidden} />
+      <StatusBar />
       <ScrollView>
-        <View style={[styles.header, { paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight as number) + 10 + insets.top : 50 + insets.top }]}>
-          <Pressable 
+        <View style={styles.header}>
+          <Pressable
             onPress={() => navigation.goBack()}
             style={styles.backButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -217,16 +166,6 @@ export default function EnggComplaintDetails() {
           <View style={{ flexDirection: 'row' }}>
             <Pressable style={styles.shareButton}>
               <Ionicons name="share-outline" size={24} color="#fff" />
-            </Pressable>
-            <Pressable
-              style={styles.rotateButton}
-              onPress={async () => {
-                await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-                setStatusBarHidden(true);
-              }}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="sync" size={24} color="#fff" />
             </Pressable>
           </View>
         </View>
@@ -241,16 +180,16 @@ export default function EnggComplaintDetails() {
               <Text style={styles.label}>Complaint Name:</Text>
               <Text style={styles.value}>{clientName}</Text>
             </View>
-           
+
             <View style={styles.infoRow}>
               <Text style={styles.label}>Assigin Date:</Text>
               <Text style={styles.value}>{route.params.Assign_Date}</Text>
             </View>
-             <View style={styles.infoRow}>
+            <View style={styles.infoRow}>
               <Text style={styles.label}>System Name:</Text>
               <Text style={styles.value}>{route.params.SYSTEM_NAME}</Text>
             </View>
-             <View style={styles.infoRow}>
+            <View style={styles.infoRow}>
               <Text style={styles.label}>Task type:</Text>
               <Text style={styles.value}>{route.params.Task_Type}</Text>
             </View>
@@ -258,60 +197,78 @@ export default function EnggComplaintDetails() {
               <Text style={styles.label}>Address:</Text>
               <Text style={styles.value}>{route.params.Address}</Text>
             </View>
-             <View style={styles.infoRow}>
+            <View style={styles.infoRow}>
               <Text style={styles.label}>Remark:</Text>
               <Text style={styles.value}>{route.params.Remark}</Text>
             </View>
-             <View style={styles.infoRow}>
+            <View style={styles.infoRow}>
               <Text style={styles.label}>Status:</Text>
               <Text style={styles.value}>{route.params.status}</Text>
             </View>
-            
-
           </View>
 
           <View style={styles.formSectionBox}>
             <Text style={styles.sectionTitle}>Update Status</Text>
 
-            <Pressable 
+            {/* Fault Reported */}
+            <Text style={styles.formLabel}>Fault Reported:</Text>
+            <TextInput
+              style={[
+                styles.textInput,
+                hasSubmitAttempt && !faultReported ? styles.inputError : null
+              ]}
+              placeholder="Enter fault reported..."
+              value={faultReported}
+              onChangeText={setFaultReported}
+            />
+            {hasSubmitAttempt && !faultReported && (
+              <Text style={styles.errorText}>Please enter fault reported</Text>
+            )}
+
+            {/* Type of Call Dropdown */}
+            <Text style={styles.formLabel}>Type of Call:</Text>
+            <Pressable
               style={[
                 styles.dropdownButton,
-                hasSubmitAttempt && !workStatus ? styles.inputError : null
+                hasSubmitAttempt && !typeOfCall ? styles.inputError : null
               ]}
-              onPress={() => setShowStatusModal(true)}
+              onPress={() => setShowTypeOfCallModal(true)}
             >
               <Text style={styles.dropdownButtonText}>
-                {workStatus || 'Select Work Status'}
+                {typeOfCall || 'Select Type of Call'}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#666" />
             </Pressable>
+            {hasSubmitAttempt && !typeOfCall && (
+              <Text style={styles.errorText}>Please select type of call</Text>
+            )}
 
             <Modal
-              visible={showStatusModal}
+              visible={showTypeOfCallModal}
               transparent={true}
               animationType="slide"
-              onRequestClose={() => setShowStatusModal(false)}
+              onRequestClose={() => setShowTypeOfCallModal(false)}
             >
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Select Work Status</Text>
-                  
-                  {['Completed', 'Pending', 'In Progress'].map((status) => (
+                  <Text style={styles.modalTitle}>Select Type of Call</Text>
+
+                  {['Installation', 'Warranty', 'Call Basis', 'AMC', 'Preventive'].map((type) => (
                     <Pressable
-                      key={status}
+                      key={type}
                       style={styles.modalItem}
                       onPress={() => {
-                        setWorkStatus(status);
-                        setShowStatusModal(false);
+                        setTypeOfCall(type);
+                        setShowTypeOfCallModal(false);
                       }}
                     >
-                      <Text style={styles.modalItemText}>{status}</Text>
+                      <Text style={styles.modalItemText}>{type}</Text>
                     </Pressable>
                   ))}
-                  
+
                   <Pressable
                     style={styles.modalCloseButton}
-                    onPress={() => setShowStatusModal(false)}
+                    onPress={() => setShowTypeOfCallModal(false)}
                   >
                     <Text style={styles.modalCloseText}>Close</Text>
                   </Pressable>
@@ -319,49 +276,96 @@ export default function EnggComplaintDetails() {
               </View>
             </Modal>
 
-            <View style={styles.uploadSection}>
-              <Text style={styles.uploadLabel}>Upload Image:</Text>
-              <View style={styles.uploadButtons}>
-                <Pressable 
-                  style={styles.uploadButton}
-                  onPress={() => handleImageUpload(true)}
-                >
-                  <Ionicons name="camera" size={20} color="#fff" />
-                  <Text style={styles.uploadButtonText}>Camera</Text>
-                </Pressable>
-                
-                <Pressable 
-                  style={styles.uploadButton}
-                  onPress={() => handleImageUpload(false)}
-                >
-                  <Ionicons name="images" size={20} color="#fff" />
-                  <Text style={styles.uploadButtonText}>Gallery</Text>
-                </Pressable>
-              </View>
-              {uploadedImage ? (
-                <Text style={styles.uploadSuccess}>✓ Image uploaded</Text>
-              ) : hasSubmitAttempt ? (
-                <Text style={styles.uploadError}>Please upload an image</Text>
-              ) : null}
+            {/* Call Attended Date and Time */}
+            <Text style={styles.formLabel}>Call Attended on Date:</Text>
+            <View style={styles.dateTimeContainer}>
+              <TextInput
+                style={[
+                  styles.dateTimeInput,
+                  hasSubmitAttempt && !callAttendedDate ? styles.inputError : null
+                ]}
+                placeholder="YYYY-MM-DD"
+                value={callAttendedDate}
+                onChangeText={setCallAttendedDate}
+              />
+              <TextInput
+                style={[
+                  styles.dateTimeInput,
+                  hasSubmitAttempt && !callAttendedTime ? styles.inputError : null
+                ]}
+                placeholder="HH:MM"
+                value={callAttendedTime}
+                onChangeText={setCallAttendedTime}
+              />
             </View>
+            {hasSubmitAttempt && (!callAttendedDate || !callAttendedTime) && (
+              <Text style={styles.errorText}>Please enter date and time</Text>
+            )}
 
-            <View style={styles.uploadSection}>
-              <Text style={styles.uploadLabel}>Upload Signature:</Text>
-              <Pressable 
-                style={styles.uploadButton}
-                onPress={handleSignatureUpload}
-              >
-                <Ionicons name="document" size={20} color="#fff" />
-                <Text style={styles.uploadButtonText}>Select File</Text>
-              </Pressable>
-              {uploadedSignature ? (
-                <Text style={styles.uploadSuccess}>✓ Signature uploaded</Text>
-              ) : hasSubmitAttempt ? (
-                <Text style={styles.uploadError}>Please upload a signature</Text>
-              ) : null}
+            {/* Call Completed Date and Time */}
+            <Text style={styles.formLabel}>Call Completed on:</Text>
+            <View style={styles.dateTimeContainer}>
+              <TextInput
+                style={[
+                  styles.dateTimeInput,
+                  hasSubmitAttempt && !callCompletedDate ? styles.inputError : null
+                ]}
+                placeholder="YYYY-MM-DD"
+                value={callCompletedDate}
+                onChangeText={setCallCompletedDate}
+              />
+              <TextInput
+                style={[
+                  styles.dateTimeInput,
+                  hasSubmitAttempt && !callCompletedTime ? styles.inputError : null
+                ]}
+                placeholder="HH:MM"
+                value={callCompletedTime}
+                onChangeText={setCallCompletedTime}
+              />
             </View>
+            {hasSubmitAttempt && (!callCompletedDate || !callCompletedTime) && (
+              <Text style={styles.errorText}>Please enter date and time</Text>
+            )}
 
-            <Text style={styles.formLabel}>Remark:</Text>
+            {/* Part Replaced */}
+            <Text style={styles.formLabel}>Part Replaced/Stand by (if any):</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter parts replaced..."
+              value={partReplaced}
+              onChangeText={setPartReplaced}
+            />
+
+            {/* Cause of Problem */}
+            <Text style={styles.formLabel}>Cause of Problem:</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter cause of problem..."
+              value={causeProblem}
+              onChangeText={setCauseProblem}
+            />
+
+            {/* Diagnosis */}
+            <Text style={styles.formLabel}>Diagnosis:</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter diagnosis..."
+              value={diagnosis}
+              onChangeText={setDiagnosis}
+            />
+
+            {/* Material Taken Out */}
+            <Text style={styles.formLabel}>Material Taken Out (if any):</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter materials taken out..."
+              value={materialTakenOut}
+              onChangeText={setMaterialTakenOut}
+            />
+
+            {/* Remarks */}
+            <Text style={styles.formLabel}>Remarks:</Text>
             <TextInput
               style={[
                 styles.textInput,
@@ -377,11 +381,126 @@ export default function EnggComplaintDetails() {
               <Text style={styles.errorText}>Please add a remark</Text>
             )}
 
+            {/* Status Dropdown */}
+            <Text style={styles.formLabel}>Status:</Text>
+            <Pressable
+              style={[
+                styles.dropdownButton,
+                hasSubmitAttempt && !workStatus ? styles.inputError : null
+              ]}
+              onPress={() => setShowStatusModal(true)}
+            >
+              <Text style={styles.dropdownButtonText}>
+                {workStatus || 'Select Work Status'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color="#666" />
+            </Pressable>
+            {hasSubmitAttempt && !workStatus && (
+              <Text style={styles.errorText}>Please select a work status</Text>
+            )}
+
+            <Modal
+              visible={showStatusModal}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setShowStatusModal(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Select Work Status</Text>
+
+                  {['Completed', 'Pending', 'Stand By', 'Under Observation'].map((status) => (
+                    <Pressable
+                      key={status}
+                      style={styles.modalItem}
+                      onPress={() => {
+                        setWorkStatus(status);
+                        setShowStatusModal(false);
+                      }}
+                    >
+                      <Text style={styles.modalItemText}>{status}</Text>
+                    </Pressable>
+                  ))}
+
+                  <Pressable
+                    style={styles.modalCloseButton}
+                    onPress={() => setShowStatusModal(false)}
+                  >
+                    <Text style={styles.modalCloseText}>Close</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </Modal>
+
             <Pressable style={styles.submitButton} onPress={handleSubmit}>
               <Text style={styles.submitButtonText}>Submit</Text>
             </Pressable>
           </View>
         </View>
+
+        {/* Document Format Selection Modal */}
+        <Modal
+          visible={showDocFormatModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowDocFormatModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.formatModalContainer}>
+              <Text style={styles.formatModalTitle}>Choose Document Format</Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.formatOption,
+                  documentFormat === 'pdf' && styles.formatOptionSelected
+                ]}
+                onPress={() => setDocumentFormat('pdf')}
+              >
+                <Text style={[
+                  styles.formatOptionText,
+                  documentFormat === 'pdf' && styles.formatOptionTextSelected
+                ]}>
+                  PDF Format
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.formatOption,
+                  documentFormat === 'docx' && styles.formatOptionSelected
+                ]}
+                onPress={() => setDocumentFormat('docx')}
+              >
+                <Text style={[
+                  styles.formatOptionText,
+                  documentFormat === 'docx' && styles.formatOptionTextSelected
+                ]}>
+                  DOCX Format (Word)
+                </Text>
+              </TouchableOpacity>
+
+              <View style={styles.formatButtonsContainer}>
+                <TouchableOpacity
+                  style={styles.formatCancelButton}
+                  onPress={() => setShowDocFormatModal(false)}
+                >
+                  <Text style={styles.formatCancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.formatSubmitButton}
+                  onPress={() => {
+                    setShowDocFormatModal(false);
+                    handleFinalSubmit();
+                  }}
+                >
+                  <Text style={styles.formatSubmitButtonText}>Submit & Download</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -397,9 +516,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight as number + 10 : 50,
+    padding: 5,
+    borderRadius: 5,
+   
+    
   },
   backButton: {
     padding: 8,
@@ -411,10 +531,6 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     padding: 8,
-  },
-  rotateButton: {
-    padding: 8,
-    marginLeft: 8,
   },
   content: {
     padding: 16,
@@ -490,12 +606,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
+    padding: 10,
+    justifyContent:'center',
+    alignItems:'center',
     backgroundColor: '#f9f9f9',
-    color: '#333',
-    textAlignVertical: 'top',
-    minHeight: 100,
+    color: '#333',   
+    height: 50, // set to whatever height you want
+
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -556,38 +673,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#555',
   },
-  uploadSection: {
-    marginBottom: 16,
-  },
-  uploadLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#555',
-  },
-  uploadButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1a73e8',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-  },
-  uploadButtonText: {
-    color: '#fff',
-    marginLeft: 8,
-    fontWeight: '600',
-  },
   submitButton: {
     backgroundColor: '#1a73e8',
     borderRadius: 8,
@@ -605,13 +690,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  uploadSuccess: {
-    color: 'green',
-    marginTop: 4,
+  dateTimeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  uploadError: {
-    color: 'red',
-    marginTop: 4,
+  dateTimeInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#f9f9f9',
+    color: '#333',
+    marginRight: 8,
   },
   inputError: {
     borderColor: 'red',
@@ -621,5 +713,81 @@ const styles = StyleSheet.create({
     color: 'red',
     marginTop: -12,
     marginBottom: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  formatModalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    width: '80%',
+    maxWidth: 400,
+  },
+  formatModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
+    textAlign: 'center',
+  },
+  formatOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  formatOptionSelected: {
+    backgroundColor: '#e8eaf6',
+    borderColor: '#3f51b5',
+  },
+  formatOptionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  formatOptionTextSelected: {
+    fontWeight: 'bold',
+    color: '#1a237e',
+  },
+  formatButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  formatCancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  formatCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#616161',
+  },
+  formatSubmitButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#1a237e',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  formatSubmitButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 }); 

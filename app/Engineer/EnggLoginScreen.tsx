@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useFocusEffect } from '@react-navigation/native';
+
 import {
   View,
   Text,
@@ -28,8 +30,10 @@ export default function EnggLoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  
+
   const shimmerAnimation = useRef(new Animated.Value(0)).current;
+  const shimmerLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+
 
   useEffect(() => {
     const loadCredentials = async () => {
@@ -37,7 +41,7 @@ export default function EnggLoginScreen() {
         const savedUsername = await AsyncStorage.getItem("engg_username");
         const savedPassword = await AsyncStorage.getItem("engg_password");
         const savedRememberMe = await AsyncStorage.getItem("engg_rememberMe");
-        
+
         if (savedRememberMe === "true") {
           setUsername(savedUsername || "");
           setPassword(savedPassword || "");
@@ -52,11 +56,11 @@ export default function EnggLoginScreen() {
 
   useEffect(() => {
     if (loginSuccess) {
-      Animated.loop(
+      shimmerLoopRef.current = Animated.loop(
         Animated.sequence([
           Animated.timing(shimmerAnimation, {
             toValue: 1,
-            duration: 1500,
+            duration: 150,
             useNativeDriver: true,
           }),
           Animated.timing(shimmerAnimation, {
@@ -65,9 +69,18 @@ export default function EnggLoginScreen() {
             useNativeDriver: true,
           }),
         ])
-      ).start();
+      );
+      shimmerLoopRef.current.start();
     }
   }, [loginSuccess]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setLoginSuccess(false); // Reset success state on focus
+    }, [])
+  );
+
+
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -117,9 +130,10 @@ export default function EnggLoginScreen() {
           await AsyncStorage.removeItem("engg_password");
           await AsyncStorage.removeItem("engg_rememberMe");
         }
-        
+
         setLoginSuccess(true);
         setTimeout(() => {
+          shimmerLoopRef.current?.stop(); // Stop shimmer animation
           navigation.navigate("Engineer/EnggListofcomplaint", {
             username: username,
             password: password,
@@ -294,8 +308,11 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
+    textAlign: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
   rememberMeContainer: {
     flexDirection: "row",
@@ -308,19 +325,19 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   buttonContainer: {
-    height: 50,
+    height: 'auto',
   },
   successContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#E8F5E9",
+    backgroundColor: "rgb(232, 244, 253)",
     padding: 14,
     borderRadius: 8,
     overflow: "hidden",
   },
   successText: {
-    color: "#4CAF50",
+    color: "#2E7D32", // Professional success green (Material Design)
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
@@ -331,7 +348,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "rgba(0, 172, 237, 0.25)",
     width: 200,
   },
 }); 
