@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ import { createComplaintReportTemplate } from '../../utils/complaintReportTempla
 import Svg, { Path, G } from 'react-native-svg';
 import * as FileSystem from 'expo-file-system';
 import ViewShot from 'react-native-view-shot';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 type EnggComplaintDetailsRouteProp = RouteProp<RootStackParamList, 'Engineer/EnggComplaintDetails'>;
 
@@ -57,23 +58,36 @@ export default function EnggComplaintDetails() {
   const [customerComment, setCustomerComment] = useState('');
   const [customerSignature, setCustomerSignature] = useState<string | null>(null);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
-  
+
   // For signature drawing
   const [paths, setPaths] = useState<Array<string>>([]);
   const [currentPath, setCurrentPath] = useState<string>('');
   const signatureRef = useRef<any>(null);
+  const currentPathRef = useRef('');
+
+  const [padLayout, setPadLayout] = useState({ x: 0, y: 0, width: 1, height: 1 });
+  const signatureBgRef = useRef(null);
+
+  useEffect(() => {
+    currentPathRef.current = currentPath;
+  }, [currentPath]);
 
   // Get dimensions for signature pad
   const screenWidth = Dimensions.get('window').width;
   const padWidth = Math.min(screenWidth - 80, 500);
   const padHeight = 200;
-  
+
   // PanResponder for signature drawing
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (evt) => {
+        // Save the previous stroke if it exists
+        if (currentPathRef.current) {
+          setPaths(prevPaths => [...prevPaths, currentPathRef.current]);
+          setCurrentPath('');
+        }
         const { locationX, locationY } = evt.nativeEvent;
         setCurrentPath(`M ${locationX} ${locationY}`);
       },
@@ -82,10 +96,10 @@ export default function EnggComplaintDetails() {
         setCurrentPath(prevPath => `${prevPath} L ${locationX} ${locationY}`);
       },
       onPanResponderRelease: () => {
-        // Save the current path when touch ends
-        if (currentPath) {
-          setPaths(prevPaths => [...prevPaths, currentPath]);
-          setCurrentPath(''); // Reset current path
+        // Save the last stroke
+        if (currentPathRef.current) {
+          setPaths(prevPaths => [...prevPaths, currentPathRef.current]);
+          setCurrentPath('');
         }
       },
     })
@@ -103,22 +117,16 @@ export default function EnggComplaintDetails() {
     if (paths.length > 0 || currentPath) {
       try {
         if (signatureRef.current) {
-          // Properly format options for ViewShot
           const options = {
             format: 'jpg',
             quality: 0.9,
-            result: 'data-uri'  // Ensure we get data URI format directly
+            result: 'data-uri'
           };
-          
-          // Capture the signature with proper options
           const capturedSignature = await signatureRef.current.capture(options);
-          console.log('Signature captured:', capturedSignature.substring(0, 30) + '...');
-          
+          console.log('Signature captured:', capturedSignature.substring(0, 60));
           setCustomerSignature(capturedSignature);
           setShowSignaturePad(false);
-          
-          // Log success for debugging
-          console.log('Signature saved successfully');
+          console.log('customerSignature after save:', capturedSignature.substring(0, 60));
         } else {
           Alert.alert('Error', 'Failed to capture signature');
         }
@@ -187,9 +195,9 @@ export default function EnggComplaintDetails() {
   // Handle final submission with document generation
   const handleFinalSubmit = async () => {
     // Log signature data for debugging
-    console.log('Signature data length:', 
+    console.log('Signature data length:',
       customerSignature ? customerSignature.length : 'No signature');
-    
+
     const formData = {
       complaintNo,
       clientName,
@@ -252,6 +260,35 @@ export default function EnggComplaintDetails() {
       }
     ]);
   };
+
+  // Lock orientation to landscape when signature pad opens, unlock when closes
+  useEffect(() => {
+    if (showSignaturePad) {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    } else {
+      ScreenOrientation.unlockAsync();
+    }
+    // On unmount, unlock orientation
+    return () => {
+      ScreenOrientation.unlockAsync();
+    };
+  }, [showSignaturePad]);
+
+  // Update pad layout on every layout change
+  const updatePadLayout = () => {
+    if (signatureBgRef.current) {
+      (signatureBgRef.current as any).measureInWindow((x: number, y: number, width: number, height: number) => {
+        setPadLayout({ x, y, width, height });
+      });
+    }
+  };
+
+  // When modal opens, and on every layout change, update pad layout
+  useEffect(() => {
+    if (showSignaturePad) {
+      setTimeout(updatePadLayout, 100);
+    }
+  }, [showSignaturePad]);
 
   return (
     <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom }]}>
@@ -470,7 +507,7 @@ export default function EnggComplaintDetails() {
             {/* Customer Comment */}
             <Text style={styles.formLabel}>Customer Comment:</Text>
             <TextInput
-              style={[styles.textInput, { height: 100 }]}
+              style={[styles.textInput]}
               multiline
               numberOfLines={4}
               placeholder="Enter customer's comment here..."
@@ -485,10 +522,11 @@ export default function EnggComplaintDetails() {
               onPress={openSignaturePad}
             >
               {customerSignature ? (
-                <View style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                  <Image 
+                <View style={styles.signaturePreviewContainer}>
+                  <Image
                     source={{ uri: customerSignature }}
-                    style={{ width: '80%', height: 70, resizeMode: 'contain' }}
+                    style={styles.signaturePreviewImage}
+                    resizeMode="contain"
                   />
                   <Text style={styles.signatureText}>Signature Saved ✓</Text>
                 </View>
@@ -643,15 +681,13 @@ export default function EnggComplaintDetails() {
         >
           <View style={styles.modalContainer}>
             <View style={styles.signatureModalContent}>
-              <Text style={styles.modalTitle}>Customer Signature</Text>
-              
-              <ViewShot 
-                ref={signatureRef} 
-                style={styles.signaturePad} 
+              <ViewShot
+                ref={signatureRef}
+                style={styles.signaturePad}
                 options={{ format: 'jpg', quality: 0.9, result: 'data-uri' }}
               >
-                <View style={styles.signatureBackground}>
-                  <Svg height="100%" width="100%" viewBox={`0 0 ${padWidth} ${padHeight}`}>
+                <View ref={signatureBgRef} style={styles.signatureBackground} onLayout={updatePadLayout}>
+                  <Svg height={padLayout.height} width={padLayout.width} viewBox={`0 0 ${padLayout.width} ${padLayout.height}`}>
                     <G>
                       {/* Draw all saved paths */}
                       {paths.map((path, index) => (
@@ -663,7 +699,7 @@ export default function EnggComplaintDetails() {
                           fill="none"
                         />
                       ))}
-                      
+
                       {/* Draw current path */}
                       {currentPath ? (
                         <Path
@@ -677,26 +713,25 @@ export default function EnggComplaintDetails() {
                   </Svg>
                 </View>
               </ViewShot>
-              
+
               {/* Touch handler overlay for signature pad */}
-              <View 
+              <View
                 style={[styles.signatureOverlay]}
                 {...panResponder.panHandlers}
               />
 
-              <View style={styles.signatureButtons}>
+              <View style={styles.signatureButtonsSmall}>
                 <TouchableOpacity
-                  style={styles.signatureButton}
+                  style={styles.signatureButtonSmall}
                   onPress={clearSignature}
                 >
-                  <Text style={styles.signatureButtonText}>Clear</Text>
+                  <Text style={styles.signatureButtonTextSmall}>Clear</Text>
                 </TouchableOpacity>
-                
                 <TouchableOpacity
-                  style={[styles.signatureButton, styles.signatureButtonPrimary]}
+                  style={[styles.signatureButtonSmall, styles.signatureButtonPrimarySmall]}
                   onPress={saveSignature}
                 >
-                  <Text style={[styles.signatureButtonText, { color: '#fff' }]}>Save</Text>
+                  <Text style={[styles.signatureButtonTextSmall, { color: '#fff' }]}>Save</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -719,8 +754,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 5,
     borderRadius: 5,
-   
-    
+
+
   },
   backButton: {
     padding: 8,
@@ -808,10 +843,10 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 8,
     padding: 10,
-    justifyContent:'center',
-    alignItems:'center',
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#f9f9f9',
-    color: '#333',   
+    color: '#333',
     height: 50, // set to whatever height you want
 
   },
@@ -998,28 +1033,29 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     backgroundColor: '#f9f9f9',
-    height: 100,
+    height: 80, // fixed height
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   signatureText: {
     color: '#4CAF50',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
   },
   signaturePlaceholder: {
     color: '#666',
-    fontSize: 16,
+    fontSize: 14,
   },
   signatureModalContent: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
-    width: '90%',
-    maxWidth: 500,
+    width: '100%',
+
   },
   signaturePad: {
-    height: 200,
+    height: 155,
     width: '100%',
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -1041,26 +1077,39 @@ const styles = StyleSheet.create({
     height: 200,
     backgroundColor: 'transparent',
   },
-  signatureButtons: {
+  signatureButtonsSmall: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
   },
-  signatureButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+  signatureButtonSmall: {
+    paddingVertical: 8,
+    paddingHorizontal: 18,
     borderRadius: 8,
     backgroundColor: '#f5f5f5',
     borderWidth: 1,
     borderColor: '#ddd',
+    marginHorizontal: 8,
   },
-  signatureButtonPrimary: {
+  signatureButtonPrimarySmall: {
     backgroundColor: '#1a73e8',
     borderColor: '#1a73e8',
   },
-  signatureButtonText: {
-    fontSize: 16,
+  signatureButtonTextSmall: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#333',
+  },
+  signaturePreviewContainer: {
+    width: '100%',
+    height: 60, // fixed preview height
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+  },
+  signaturePreviewImage: {
+    width: '100%',
+    height: 50, // fixed image height
   },
 }); 
