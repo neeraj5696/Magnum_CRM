@@ -39,17 +39,71 @@ interface DatePickerModalProps {
 }
 
 const DatePickerModal: React.FC<DatePickerModalProps> = ({ visible, onClose, onSelect, currentValue }) => {
-  const [tempDate, setTempDate] = useState<Date>(currentValue ? new Date(currentValue) : new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(currentValue ? new Date(currentValue) : new Date());
+  const [currentMonth, setCurrentMonth] = useState<number>(selectedDate.getMonth());
+  const [currentYear, setCurrentYear] = useState<number>(selectedDate.getFullYear());
 
   useEffect(() => {
     if (visible) {
-      setTempDate(currentValue ? new Date(currentValue) : new Date());
+      const date = currentValue ? new Date(currentValue) : new Date();
+      setSelectedDate(date);
+      setCurrentMonth(date.getMonth());
+      setCurrentYear(date.getFullYear());
     }
   }, [visible, currentValue]);
 
-  // Helper function to format date
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (year: number, month: number) => {
+    return new Date(year, month, 1).getDay();
+  };
+
   const formatDate = (date: Date) => {
     return date.toISOString().split('T')[0];
+  };
+
+  const renderCalendarDays = () => {
+    const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+    const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
+    const days = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<View key={`empty-${i}`} style={styles.calendarDayEmpty} />);
+    }
+
+    // Add cells for each day of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentYear, currentMonth, day);
+      const isSelected = selectedDate.getDate() === day &&
+                        selectedDate.getMonth() === currentMonth &&
+                        selectedDate.getFullYear() === currentYear;
+      const isToday = new Date().toDateString() === date.toDateString();
+
+      days.push(
+        <TouchableOpacity
+          key={day}
+          style={[
+            styles.calendarDay,
+            isSelected && styles.calendarDaySelected,
+            isToday && styles.calendarDayToday
+          ]}
+          onPress={() => setSelectedDate(date)}
+        >
+          <Text style={[
+            styles.calendarDayText,
+            isSelected && styles.calendarDayTextSelected,
+            isToday && styles.calendarDayTextToday
+          ]}>
+            {day}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return days;
   };
 
   return (
@@ -69,7 +123,7 @@ const DatePickerModal: React.FC<DatePickerModalProps> = ({ visible, onClose, onS
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
-                  onSelect(formatDate(tempDate));
+                  onSelect(formatDate(selectedDate));
                   onClose();
                 }}
                 style={styles.pickerActionButton}
@@ -78,51 +132,188 @@ const DatePickerModal: React.FC<DatePickerModalProps> = ({ visible, onClose, onS
               </TouchableOpacity>
             </View>
           </View>
-          <View style={styles.pickerContent}>
-            <Picker
-              selectedValue={tempDate.getFullYear()}
-              onValueChange={(value) => {
-                const newDate = new Date(tempDate);
-                newDate.setFullYear(value);
-                setTempDate(newDate);
-              }}
-              style={styles.picker}
-            >
-              {Array.from({ length: 10 }, (_, i) => {
-                const year = new Date().getFullYear() - 5 + i;
-                return <Picker.Item key={year} label={String(year)} value={year} />;
-              })}
-            </Picker>
-            <Picker
-              selectedValue={tempDate.getMonth()}
-              onValueChange={(value) => {
-                const newDate = new Date(tempDate);
-                newDate.setMonth(value);
-                setTempDate(newDate);
-              }}
-              style={styles.picker}
-            >
-              {Array.from({ length: 12 }, (_, i) => (
-                <Picker.Item
-                  key={i}
-                  label={new Date(2000, i).toLocaleString('default', { month: 'long' })}
-                  value={i}
-                />
+          <View style={styles.calendarContainer}>
+            <View style={styles.calendarHeader}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (currentMonth === 0) {
+                    setCurrentMonth(11);
+                    setCurrentYear(currentYear - 1);
+                  } else {
+                    setCurrentMonth(currentMonth - 1);
+                  }
+                }}
+                style={styles.calendarArrow}
+              >
+                <Ionicons name="chevron-back" size={24} color="#333" />
+              </TouchableOpacity>
+              <Text style={styles.calendarMonthYear}>
+                {new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  if (currentMonth === 11) {
+                    setCurrentMonth(0);
+                    setCurrentYear(currentYear + 1);
+                  } else {
+                    setCurrentMonth(currentMonth + 1);
+                  }
+                }}
+                style={styles.calendarArrow}
+              >
+                <Ionicons name="chevron-forward" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.calendarWeekDays}>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <Text key={day} style={styles.calendarWeekDay}>{day}</Text>
               ))}
-            </Picker>
-            <Picker
-              selectedValue={tempDate.getDate()}
-              onValueChange={(value) => {
-                const newDate = new Date(tempDate);
-                newDate.setDate(value);
-                setTempDate(newDate);
-              }}
-              style={styles.picker}
-            >
-              {Array.from({ length: 31 }, (_, i) => (
-                <Picker.Item key={i + 1} label={String(i + 1)} value={i + 1} />
-              ))}
-            </Picker>
+            </View>
+            <View style={styles.calendarDays}>
+              {renderCalendarDays()}
+            </View>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+// TimePickerModal component
+interface TimePickerModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (time: string) => void;
+  currentValue: string;
+}
+
+const TimePickerModal: React.FC<TimePickerModalProps> = ({ visible, onClose, onSelect, currentValue }) => {
+  const [hours, setHours] = useState<number>(currentValue ? parseInt(currentValue.split(':')[0]) : new Date().getHours());
+  const [minutes, setMinutes] = useState<number>(currentValue ? parseInt(currentValue.split(':')[1]) : new Date().getMinutes());
+  const [isAM, setIsAM] = useState<boolean>(currentValue ? parseInt(currentValue.split(':')[0]) < 12 : new Date().getHours() < 12);
+
+  useEffect(() => {
+    if (visible) {
+      if (currentValue) {
+        const [h, m] = currentValue.split(':').map(Number);
+        setHours(h);
+        setMinutes(m);
+        setIsAM(h < 12);
+      } else {
+        const now = new Date();
+        setHours(now.getHours());
+        setMinutes(now.getMinutes());
+        setIsAM(now.getHours() < 12);
+      }
+    }
+  }, [visible, currentValue]);
+
+  const formatTime = (h: number, m: number, am: boolean) => {
+    const hour = am ? (h === 0 ? 12 : h) : (h === 12 ? 12 : h - 12);
+    return `${String(hour).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.pickerContainer}>
+          <View style={styles.pickerHeader}>
+            <Text style={styles.pickerTitle}>Select Time</Text>
+            <View style={styles.pickerActions}>
+              <TouchableOpacity onPress={onClose} style={styles.pickerActionButton}>
+                <Text style={styles.pickerCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  const finalHours = isAM ? (hours === 12 ? 0 : hours) : (hours === 12 ? 12 : hours + 12);
+                  onSelect(formatTime(finalHours, minutes, isAM));
+                  onClose();
+                }}
+                style={styles.pickerActionButton}
+              >
+                <Text style={styles.pickerDoneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.timePickerContent}>
+            <View style={styles.timePickerColumn}>
+              <Text style={styles.timePickerLabel}>Hour</Text>
+              <ScrollView style={styles.timePickerScroll}>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
+                  <TouchableOpacity
+                    key={hour}
+                    style={[
+                      styles.timePickerItem,
+                      hours === hour && styles.timePickerItemSelected
+                    ]}
+                    onPress={() => setHours(hour)}
+                  >
+                    <Text style={[
+                      styles.timePickerItemText,
+                      hours === hour && styles.timePickerItemTextSelected
+                    ]}>
+                      {String(hour).padStart(2, '0')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+            <View style={styles.timePickerColumn}>
+              <Text style={styles.timePickerLabel}>Minute</Text>
+              <ScrollView style={styles.timePickerScroll}>
+                {Array.from({ length: 60 }, (_, i) => i).map((minute) => (
+                  <TouchableOpacity
+                    key={minute}
+                    style={[
+                      styles.timePickerItem,
+                      minutes === minute && styles.timePickerItemSelected
+                    ]}
+                    onPress={() => setMinutes(minute)}
+                  >
+                    <Text style={[
+                      styles.timePickerItemText,
+                      minutes === minute && styles.timePickerItemTextSelected
+                    ]}>
+                      {String(minute).padStart(2, '0')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+            <View style={styles.timePickerColumn}>
+              <Text style={styles.timePickerLabel}>AM/PM</Text>
+              <View style={styles.ampmContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.ampmButton,
+                    isAM && styles.ampmButtonSelected
+                  ]}
+                  onPress={() => setIsAM(true)}
+                >
+                  <Text style={[
+                    styles.ampmButtonText,
+                    isAM && styles.ampmButtonTextSelected
+                  ]}>AM</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.ampmButton,
+                    !isAM && styles.ampmButtonSelected
+                  ]}
+                  onPress={() => setIsAM(false)}
+                >
+                  <Text style={[
+                    styles.ampmButtonText,
+                    !isAM && styles.ampmButtonTextSelected
+                  ]}>PM</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -637,7 +828,7 @@ export default function EnggComplaintDetails() {
             )}
             
             {showAttendedTimePicker && (
-              <DatePickerModal
+              <TimePickerModal
                 visible={showAttendedTimePicker}
                 onClose={() => setShowAttendedTimePicker(false)}
                 onSelect={setCallAttendedTime}
@@ -677,7 +868,7 @@ export default function EnggComplaintDetails() {
             )}
             
             {showCompletedTimePicker && (
-              <DatePickerModal
+              <TimePickerModal
                 visible={showCompletedTimePicker}
                 onClose={() => setShowCompletedTimePicker(false)}
                 onSelect={setCallCompletedTime}
@@ -1032,8 +1223,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 5,
     borderRadius: 5,
-
-
   },
   backButton: {
     padding: 8,
@@ -1126,7 +1315,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     color: '#333',
     height: 50, // set to whatever height you want
-
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -1330,7 +1518,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     width: '100%',
-
   },
   signaturePad: {
     height: 155,
@@ -1477,5 +1664,131 @@ const styles = StyleSheet.create({
   dateTimeText: {
     marginLeft: 8,
     color: '#333',
+  },
+  timePickerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 20,
+    height: 300,
+  },
+  timePickerColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  timePickerLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+  },
+  timePickerScroll: {
+    width: '100%',
+  },
+  timePickerItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  timePickerItemSelected: {
+    backgroundColor: '#e8eaf6',
+    borderRadius: 8,
+  },
+  timePickerItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  timePickerItemTextSelected: {
+    color: '#1a73e8',
+    fontWeight: 'bold',
+  },
+  ampmContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  ampmButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginHorizontal: 4,
+    backgroundColor: '#f5f5f5',
+  },
+  ampmButtonSelected: {
+    backgroundColor: '#1a73e8',
+  },
+  ampmButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  ampmButtonTextSelected: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  calendarContainer: {
+    padding: 20,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  calendarArrow: {
+    padding: 8,
+  },
+  calendarMonthYear: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  calendarWeekDays: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+  },
+  calendarWeekDay: {
+    width: 40,
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  calendarDays: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  calendarDay: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 2,
+  },
+  calendarDaySelected: {
+    backgroundColor: '#1a73e8',
+    borderRadius: 20,
+  },
+  calendarDayToday: {
+    borderWidth: 1,
+    borderColor: '#1a73e8',
+    borderRadius: 20,
+  },
+  calendarDayEmpty: {
+    width: 40,
+    height: 40,
+    margin: 2,
+  },
+  calendarDayText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  calendarDayTextSelected: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  calendarDayTextToday: {
+    color: '#1a73e8',
+    fontWeight: 'bold',
   },
 }); 
