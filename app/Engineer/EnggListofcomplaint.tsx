@@ -50,8 +50,6 @@ export default function EnggListofcomplaint() {
       );
 
       const responseText = await response.text();
-      console.log("Raw response:", responseText);
-
       let data;
       try {
         data = JSON.parse(responseText);
@@ -62,8 +60,6 @@ export default function EnggListofcomplaint() {
 
       if (data?.status === "success" && data?.data) {
         setComplaints(data.data);
-      } else {
-        console.error("No complaint data found");
       }
     } catch (error) {
       console.error("Error fetching complaints:", error);
@@ -78,12 +74,10 @@ export default function EnggListofcomplaint() {
     }
   }, [username, password]);
 
-  // PanResponder for swipe detection
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only respond to horizontal gestures that are significant enough
         const isHorizontalSwipe =
           Math.abs(gestureState.dx) > Math.abs(gestureState.dy * 2);
         const isSignificantMove = Math.abs(gestureState.dx) > 10;
@@ -91,13 +85,11 @@ export default function EnggListofcomplaint() {
       },
       onPanResponderRelease: (_, gestureState) => {
         if (!isExpanded && (gestureState.dx > 50 || gestureState.vx > 0.5)) {
-          // Swipe right when closed -> open
           setIsExpanded(true);
         } else if (
           isExpanded &&
           (gestureState.dx < -50 || gestureState.vx < -0.5)
         ) {
-          // Swipe left when open -> close
           setIsExpanded(false);
         }
       },
@@ -225,10 +217,8 @@ export default function EnggListofcomplaint() {
       </View>
 
       <View style={styles.contentContainer}>
-        {/* Gesture Area */}
         <View style={styles.gestureArea} {...panResponder.panHandlers} />
 
-        {/* Expanded Navbar */}
         {isExpanded && (
           <View style={styles.expandedNav}>
             <Pressable
@@ -252,70 +242,54 @@ export default function EnggListofcomplaint() {
                 </View>
               </View>
 
-              <Text style={styles.username}>{username || "Engineer"}</Text>
+              <View style={styles.navItems}>
+                <Pressable
+                  style={styles.navItem}
+                  onPress={() => handleNavigation("home")}
+                >
+                  <MaterialIcons name="home" size={24} color="#333" />
+                  <Text style={styles.navText}>Home</Text>
+                </Pressable>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.navItem,
-                  pressed && styles.navItemPressed,
-                ]}
-                onPress={() => handleNavigation("home")}
-              >
-                <View style={styles.iconContainer}>
-                  <MaterialIcons name="home-filled" size={22} color="#666" />
-                </View>
-                <Text style={styles.navText}>Home</Text>
-              </Pressable>
+                <Pressable
+                  style={styles.navItem}
+                  onPress={() => handleNavigation("Rate")}
+                >
+                  <MaterialIcons name="star" size={24} color="#333" />
+                  <Text style={styles.navText}>Rate Us</Text>
+                </Pressable>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.navItem,
-                  pressed && styles.navItemPressed,
-                ]}
-                onPress={() => {
-                  setIsExpanded(false);
-                  handleAboutUs();
-                }}
-              >
-                <View style={styles.iconContainer}>
-                  <MaterialIcons name="language" size={22} color="#666" />
-                </View>
-                <Text style={styles.navText}>About Us</Text>
-              </Pressable>
+                <Pressable
+                  style={styles.navItem}
+                  onPress={handleAboutUs}
+                >
+                  <MaterialIcons name="info" size={24} color="#333" />
+                  <Text style={styles.navText}>About Us</Text>
+                </Pressable>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.navItem,
-                  pressed && styles.navItemPressed,
-                ]}
-                onPress={() => handleNavigation("Rate")}
-              >
-                <View style={styles.iconContainer}>
-                  <MaterialIcons name="star-rate" size={22} color="#666" />
-                </View>
-                <Text style={styles.navText}>Rate Us</Text>
-              </Pressable>
+                <Pressable
+                  style={styles.navItem}
+                  onPress={handleLogout}
+                >
+                  <MaterialIcons name="logout" size={24} color="#333" />
+                  <Text style={styles.navText}>Logout</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         )}
 
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#0000ff" />
-            <Text style={styles.loadingText}>Loading complaints...</Text>
+            <ActivityIndicator size="large" color="#0066CC" />
           </View>
-        ) : complaints.length > 0 ? (
+        ) : (
           <FlatList
             data={complaints}
             renderItem={renderItem}
             keyExtractor={(item) => item.S_SERVNO}
-            contentContainerStyle={styles.flatListContent}
+            contentContainerStyle={styles.listContainer}
           />
-        ) : (
-          <View style={styles.noComplaintsContainer}>
-            <MaterialIcons name="inbox" size={64} color="#ccc" />
-            <Text style={styles.noComplaintsText}>No complaints found</Text>
-          </View>
         )}
       </View>
     </View>
@@ -331,176 +305,150 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: "#fff",
-    padding: 15,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1.5,
-    zIndex: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  menuButton: {
+    padding: 8,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
   },
-  menuButton: {
-    padding: 5,
-  },
   shareButton: {
-    padding: 5,
+    padding: 8,
   },
   contentContainer: {
     flex: 1,
-    position: "relative",
   },
   gestureArea: {
     position: "absolute",
     top: 0,
     left: 0,
-    width: 20,
-    height: "100%",
-    zIndex: 5,
+    right: 0,
+    height: 50,
+    zIndex: 1,
   },
   expandedNav: {
     position: "absolute",
-    left: 0,
     top: 0,
+    left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1000,
-    flexDirection: "row",
+    zIndex: 2,
   },
   overlay: {
     position: "absolute",
     top: 0,
+    left: 0,
     right: 0,
     bottom: 0,
-    left: 0,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   navContainer: {
-    width: "70%",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    bottom: 0,
+    width: "80%",
+    maxWidth: 300,
     backgroundColor: "#fff",
-    paddingVertical: 20,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    padding: 20,
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 30,
   },
   logoBackground: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#fff",
-    alignItems: "center",
+    width: 120,
+    height: 120,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 60,
     justifyContent: "center",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
+    alignItems: "center",
     overflow: "hidden",
   },
   stripeContainer: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: "space-between",
+    width: "100%",
+    height: "100%",
   },
   stripe: {
-    height: 8,
-    backgroundColor: "rgba(25, 118, 210, 0.05)",
+    position: "absolute",
     width: "100%",
+    height: "10%",
+    backgroundColor: "#0066CC",
+    opacity: 0.1,
   },
   logoImage: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     resizeMode: "contain",
   },
-  username: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 20,
+  navItems: {
+    marginTop: 20,
   },
   navItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 0,
-  },
-  navItemPressed: {
-    backgroundColor: "#f0f0f0",
-  },
-  iconContainer: {
-    width: 28,
-    alignItems: "center",
-    marginRight: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
   },
   navText: {
-    fontSize: 15,
+    marginLeft: 12,
+    fontSize: 16,
     color: "#333",
   },
-  flatListContent: {
+  listContainer: {
     padding: 16,
   },
   card: {
-    backgroundColor: "white",
-    borderRadius: 12,
+    backgroundColor: "#fff",
+    borderRadius: 8,
     padding: 16,
-    marginBottom: 16,
-    elevation: 3,
+    marginBottom: 12,
+    elevation: 2,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   labelContainer: {
     flexDirection: "row",
     alignItems: "center",
-    minWidth: 140,
+    width: 140,
   },
   labelIcon: {
-    marginRight: 8,
+    marginRight: 4,
   },
   label: {
-    fontWeight: "600",
-    color: "#333",
     fontSize: 14,
+    color: "#666",
   },
   text: {
-    fontSize: 14,
-    color: "#0066CC",
     flex: 1,
+    fontSize: 14,
+    color: "#333",
     fontWeight: "500",
   },
   grayText: {
-    fontSize: 14,
-    color: "#555",
     flex: 1,
+    fontSize: 14,
+    color: "#666",
   },
   datetimeContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end",
     marginTop: 8,
   },
   datetimeIcon: {
@@ -514,20 +462,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#666",
-  },
-  noComplaintsContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  noComplaintsText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#666",
   },
 });

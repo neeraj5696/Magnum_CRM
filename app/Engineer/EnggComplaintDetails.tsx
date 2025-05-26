@@ -23,7 +23,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { generatePdfFromHtml, generateDocxFromHtml } from '../../utils/documentGenerator';
 import { createComplaintReportTemplate } from '../../utils/complaintReportTemplate';
 import Svg, { Path, G } from 'react-native-svg';
-import * as FileSystem from 'expo-file-system';
 import ViewShot from 'react-native-view-shot';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Picker } from '@react-native-picker/picker';
@@ -537,7 +536,7 @@ export default function EnggComplaintDetails() {
 
     // Generate document from form data with the specialized template
     try {
-      console.log(`Generating ${documentFormat.toUpperCase()} from form data...`);
+    //  console.log(`Generating ${documentFormat.toUpperCase()} from form data...`);
       const htmlContent = createComplaintReportTemplate(formData);
       const fileName = `complaint_${complaintNo}_report`;
 
@@ -550,7 +549,7 @@ export default function EnggComplaintDetails() {
       }
 
       if (success) {
-        console.log(`${documentFormat.toUpperCase()} generated successfully`);
+      //  console.log(`${documentFormat.toUpperCase()} generated successfully`);
       } else {
         console.error(`Failed to generate ${documentFormat.toUpperCase()}`);
       }
@@ -603,13 +602,11 @@ export default function EnggComplaintDetails() {
 
   // Fetch pending reasons when workStatus is 'Pending'
   const fetchPendingReasons = async () => {
-    console.log('fetchPendingReasons called');
+    
     const formData = new URLSearchParams();
     formData.append('username', route.params.username);
     formData.append('password', route.params.password);
-    console.log('username',route.params.username);
-    console.log('password',route.params.password);
-    console.log('formData', formData.toString());
+   
     try {
       const res = await fetch('https://hma.magnum.org.in/appPendingstatus.php', {
         method: 'POST',
@@ -619,7 +616,7 @@ export default function EnggComplaintDetails() {
         body: formData.toString(),
       });
       const text = await res.text();
-      console.log('raw response:', text);
+      
       // Remove prefix before parsing
       const jsonStart = text.indexOf('{');
       if (jsonStart === -1) {
@@ -650,9 +647,9 @@ export default function EnggComplaintDetails() {
     }
   };
 
-  console.log('Component rendered');
+  
   useEffect(() => {
-    console.log('workStatus changed:', workStatus);
+   
     if (workStatus === 'Pending') {
       fetchPendingReasons();
     } else {
@@ -1398,13 +1395,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dateTimeInput: {
-    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     backgroundColor: '#f9f9f9',
-    color: '#333',
+    flex: 1,
     marginRight: 8,
   },
   inputError: {
@@ -1643,16 +1642,6 @@ const styles = StyleSheet.create({
   dateTimeInputGroup: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  dateTimeInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#f9f9f9',
   },
   dateInput: {
     flex: 1,
