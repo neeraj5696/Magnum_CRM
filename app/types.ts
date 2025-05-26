@@ -31,6 +31,8 @@ export type RootStackParamList = {
     Address: string;
     Remark: string;
     SYSTEM_NAME:string;
+    username: string;
+    password: string;
   };
   
   // Manager Complaint Routes

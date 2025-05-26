@@ -140,16 +140,18 @@ export default function EnggListofcomplaint() {
       style={[styles.card, { borderLeftWidth: 4, borderLeftColor: '#0066CC' }]}
       onPress={() =>
         navigation.navigate("Engineer/EnggComplaintDetails", {
-          complaintNo: item.S_SERVNO,
-          clientName: item.COMP_NAME,
-          status: item.S_jobstatus,
-          dateTime: item.S_SERVDT,
-          Engineer: item.S_assignedengg,
-          Assign_Date: item.S_assigndate,
-          Task_Type: item.S_TASK_TYPE,
-          Address: item.COMP_ADD1,
-          Remark: item.S_REMARK1,
-          SYSTEM_NAME: item.SYSTEM_NAME,
+          complaintNo: String(item.S_SERVNO),
+          clientName: String(item.COMP_NAME),
+          status: String(item.S_jobstatus),
+          dateTime: String(item.S_SERVDT),
+          Engineer: String(item.S_assignedengg),
+          Assign_Date: String(item.S_assigndate),
+          Task_Type: String(item.S_TASK_TYPE),
+          Address: String(item.COMP_ADD1),
+          Remark: String(item.S_REMARK1),
+          SYSTEM_NAME: String(item.SYSTEM_NAME),
+          username: String(username),
+          password: String(password),
         })
       }
     >

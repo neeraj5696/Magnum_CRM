@@ -87,7 +87,7 @@ export const createComplaintReportTemplate = (data: any) => {
           
           .container {
             max-width: 850px;
-            margin: 20px auto;
+            margin: 10px auto;
             background-color: white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
@@ -97,7 +97,7 @@ export const createComplaintReportTemplate = (data: any) => {
           .header {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
-            padding: 30px;
+            padding: 16px 10px 18px 10px;
             text-align: center;
             position: relative;
           }
@@ -108,12 +108,12 @@ export const createComplaintReportTemplate = (data: any) => {
             bottom: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3px;
             background: linear-gradient(90deg, var(--success-color), var(--info-color), var(--warning-color));
           }
           
           .company-name {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 700;
             margin: 0;
             text-transform: uppercase;
@@ -121,17 +121,17 @@ export const createComplaintReportTemplate = (data: any) => {
           }
           
           .document-title {
-            font-size: 20px;
-            margin-top: 8px;
+            font-size: 15px;
+            margin-top: 4px;
             font-weight: 400;
             opacity: 0.9;
           }
           
           .complaint-number {
             background-color: var(--background-light);
-            padding: 15px 20px;
+            padding: 8px 10px;
             text-align: center;
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--primary-color);
             border-bottom: 1px solid var(--border-color);
@@ -142,12 +142,12 @@ export const createComplaintReportTemplate = (data: any) => {
           
           .complaint-number::before {
             content: '📋';
-            margin-right: 10px;
-            font-size: 20px;
+            margin-right: 8px;
+            font-size: 18px;
           }
           
           .section {
-            padding: 25px;
+            padding: 14px 14px 10px 14px;
             border-bottom: 1px solid var(--border-color);
           }
           
@@ -156,10 +156,10 @@ export const createComplaintReportTemplate = (data: any) => {
           }
           
           .section-title {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--primary-color);
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             display: flex;
@@ -170,20 +170,20 @@ export const createComplaintReportTemplate = (data: any) => {
             content: '';
             display: inline-block;
             width: 4px;
-            height: 20px;
+            height: 16px;
             background-color: var(--primary-color);
-            margin-right: 10px;
+            margin-right: 8px;
             border-radius: 2px;
           }
           
           .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            gap: 12px;
           }
           
           .info-item {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             display: flex;
             flex-direction: column;
           }
@@ -191,17 +191,17 @@ export const createComplaintReportTemplate = (data: any) => {
           .info-label {
             font-weight: 500;
             color: var(--text-secondary);
-            font-size: 14px;
-            margin-bottom: 5px;
+            font-size: 13px;
+            margin-bottom: 3px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
           }
           
           .info-value {
             font-weight: 400;
-            font-size: 16px;
+            font-size: 14px;
             color: var(--text-primary);
-            padding: 8px 12px;
+            padding: 6px 8px;
             background-color: var(--background-light);
             border-radius: 4px;
             border-left: 3px solid var(--primary-color);
@@ -209,9 +209,9 @@ export const createComplaintReportTemplate = (data: any) => {
           
           .remark-section {
             background-color: var(--background-light);
-            padding: 20px;
+            padding: 10px 10px 8px 10px;
             border-radius: 6px;
-            margin-top: 20px;
+            margin-top: 10px;
             border: 1px solid var(--border-color);
           }
           
@@ -219,7 +219,7 @@ export const createComplaintReportTemplate = (data: any) => {
             font-style: italic;
             color: var(--text-secondary);
             line-height: 1.6;
-            padding: 10px;
+            padding: 6px;
             background-color: white;
             border-radius: 4px;
             border-left: 3px solid var(--info-color);
@@ -228,49 +228,49 @@ export const createComplaintReportTemplate = (data: any) => {
           .signatures {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            padding: 30px;
+            gap: 18px;
+            padding: 16px 10px 10px 10px;
             background-color: var(--background-light);
           }
           
           .signature-box {
             background-color: white;
-            padding: 20px;
+            padding: 10px;
             border-radius: 6px;
             text-align: center;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           }
           
           .signature-label {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-secondary);
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             font-weight: 500;
           }
           
           .signature-placeholder {
             color: var(--text-secondary);
             font-style: italic;
-            padding: 20px;
+            padding: 10px;
             border: 1px dashed var(--border-color);
             border-radius: 4px;
-            margin-top: 10px;
+            margin-top: 6px;
           }
           
           .footer {
             background-color: var(--background-light);
-            padding: 20px;
+            padding: 10px 0 6px 0;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-secondary);
             border-top: 1px solid var(--border-color);
           }
           
           .status-tag {
             display: inline-block;
-            padding: 6px 12px;
+            padding: 4px 8px;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;

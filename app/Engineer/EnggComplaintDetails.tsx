@@ -26,8 +26,109 @@ import Svg, { Path, G } from 'react-native-svg';
 import * as FileSystem from 'expo-file-system';
 import ViewShot from 'react-native-view-shot';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Picker } from '@react-native-picker/picker';
 
 type EnggComplaintDetailsRouteProp = RouteProp<RootStackParamList, 'Engineer/EnggComplaintDetails'>;
+
+// DatePickerModal component
+interface DatePickerModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (date: string) => void;
+  currentValue: string;
+}
+
+const DatePickerModal: React.FC<DatePickerModalProps> = ({ visible, onClose, onSelect, currentValue }) => {
+  const [tempDate, setTempDate] = useState<Date>(currentValue ? new Date(currentValue) : new Date());
+
+  useEffect(() => {
+    if (visible) {
+      setTempDate(currentValue ? new Date(currentValue) : new Date());
+    }
+  }, [visible, currentValue]);
+
+  // Helper function to format date
+  const formatDate = (date: Date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.pickerContainer}>
+          <View style={styles.pickerHeader}>
+            <Text style={styles.pickerTitle}>Select Date</Text>
+            <View style={styles.pickerActions}>
+              <TouchableOpacity onPress={onClose} style={styles.pickerActionButton}>
+                <Text style={styles.pickerCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  onSelect(formatDate(tempDate));
+                  onClose();
+                }}
+                style={styles.pickerActionButton}
+              >
+                <Text style={styles.pickerDoneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.pickerContent}>
+            <Picker
+              selectedValue={tempDate.getFullYear()}
+              onValueChange={(value) => {
+                const newDate = new Date(tempDate);
+                newDate.setFullYear(value);
+                setTempDate(newDate);
+              }}
+              style={styles.picker}
+            >
+              {Array.from({ length: 10 }, (_, i) => {
+                const year = new Date().getFullYear() - 5 + i;
+                return <Picker.Item key={year} label={String(year)} value={year} />;
+              })}
+            </Picker>
+            <Picker
+              selectedValue={tempDate.getMonth()}
+              onValueChange={(value) => {
+                const newDate = new Date(tempDate);
+                newDate.setMonth(value);
+                setTempDate(newDate);
+              }}
+              style={styles.picker}
+            >
+              {Array.from({ length: 12 }, (_, i) => (
+                <Picker.Item
+                  key={i}
+                  label={new Date(2000, i).toLocaleString('default', { month: 'long' })}
+                  value={i}
+                />
+              ))}
+            </Picker>
+            <Picker
+              selectedValue={tempDate.getDate()}
+              onValueChange={(value) => {
+                const newDate = new Date(tempDate);
+                newDate.setDate(value);
+                setTempDate(newDate);
+              }}
+              style={styles.picker}
+            >
+              {Array.from({ length: 31 }, (_, i) => (
+                <Picker.Item key={i + 1} label={String(i + 1)} value={i + 1} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 export default function EnggComplaintDetails() {
   const route = useRoute<EnggComplaintDetailsRouteProp>();
@@ -67,6 +168,20 @@ export default function EnggComplaintDetails() {
 
   const [padLayout, setPadLayout] = useState({ x: 0, y: 0, width: 1, height: 1 });
   const signatureBgRef = useRef(null);
+
+  const [showAttendedDatePicker, setShowAttendedDatePicker] = useState(false);
+  const [showAttendedTimePicker, setShowAttendedTimePicker] = useState(false);
+  const [showCompletedDatePicker, setShowCompletedDatePicker] = useState(false);
+  const [showCompletedTimePicker, setShowCompletedTimePicker] = useState(false);
+
+  // Pending reason state
+  const [pendingReasons, setPendingReasons] = useState<string[]>([]);
+  const [pendingReason, setPendingReason] = useState('');
+  const [showPendingReason, setShowPendingReason] = useState(false);
+  const [showPendingReasonModal, setShowPendingReasonModal] = useState(false);
+
+  // Add new state for picker values
+  const [tempDate, setTempDate] = useState(new Date());
 
   useEffect(() => {
     currentPathRef.current = currentPath;
@@ -155,6 +270,11 @@ export default function EnggComplaintDetails() {
 
     if (!workStatus) {
       Alert.alert('Error', 'Please select a work status');
+      return;
+    }
+
+    if (workStatus === 'Pending' && !pendingReason) {
+      Alert.alert('Error', 'Please select a pending reason');
       return;
     }
 
@@ -247,14 +367,14 @@ export default function EnggComplaintDetails() {
       console.error(`Error in ${documentFormat.toUpperCase()} generation:`, error);
     }
 
-    console.log('Form Data:', formData);
+    console.log('formData', formData.toString());
     Alert.alert('Success', `Data submitted and ${documentFormat.toUpperCase()} report generated successfully`, [
       {
         text: 'OK',
         onPress: () => {
           navigation.navigate('Engineer/EnggListofcomplaint', {
-            username: '',
-            password: ''
+            username: route.params.username,
+            password: route.params.password
           });
         }
       }
@@ -289,6 +409,75 @@ export default function EnggComplaintDetails() {
       setTimeout(updatePadLayout, 100);
     }
   }, [showSignaturePad]);
+
+  // Fetch pending reasons when workStatus is 'Pending'
+  const fetchPendingReasons = async () => {
+    console.log('fetchPendingReasons called');
+    const formData = new URLSearchParams();
+    formData.append('username', route.params.username);
+    formData.append('password', route.params.password);
+    console.log('username',route.params.username);
+    console.log('password',route.params.password);
+    console.log('formData', formData.toString());
+    try {
+      const res = await fetch('https://hma.magnum.org.in/appPendingstatus.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      });
+      const text = await res.text();
+      console.log('raw response:', text);
+      // Remove prefix before parsing
+      const jsonStart = text.indexOf('{');
+      if (jsonStart === -1) {
+        console.log('No JSON found in response');
+        return;
+      }
+      const jsonString = text.slice(jsonStart);
+      let data;
+      try {
+        data = JSON.parse(jsonString);
+      } catch (e) {
+        console.log('Failed to parse JSON:', e);
+        return;
+      }
+      console.log('data',data);
+      if (data.status === 'success' && Array.isArray(data.data)) {
+        setPendingReasons(data.data.map((item: { PCOMP_STATUS: string }) => item.PCOMP_STATUS));
+        setShowPendingReason(true);
+        data.data.forEach((item: { PCOMP_STATUS: string }) => {
+          console.log('Reason:', item.PCOMP_STATUS);
+        });
+      } else {
+        setShowPendingReason(false);
+      }
+    } catch (error) {
+      setShowPendingReason(false);
+      console.log('error',error);
+    }
+  };
+
+  console.log('Component rendered');
+  useEffect(() => {
+    console.log('workStatus changed:', workStatus);
+    if (workStatus === 'Pending') {
+      fetchPendingReasons();
+    } else {
+      setShowPendingReason(false);
+    }
+  }, [workStatus]);
+
+  // Helper function to format date
+  const formatDate = (date: Date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  // Helper function to format time
+  const formatTime = (date: Date) => {
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  };
 
   return (
     <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom }]}>
@@ -417,55 +606,83 @@ export default function EnggComplaintDetails() {
             </Modal>
 
             {/* Call Attended Date and Time */}
-            <Text style={styles.formLabel}>Call Attended on Date:</Text>
-            <View style={styles.dateTimeContainer}>
-              <TextInput
-                style={[
-                  styles.dateTimeInput,
-                  hasSubmitAttempt && !callAttendedDate ? styles.inputError : null
-                ]}
-                placeholder="YYYY-MM-DD"
-                value={callAttendedDate}
-                onChangeText={setCallAttendedDate}
-              />
-              <TextInput
-                style={[
-                  styles.dateTimeInput,
-                  hasSubmitAttempt && !callAttendedTime ? styles.inputError : null
-                ]}
-                placeholder="HH:MM"
-                value={callAttendedTime}
-                onChangeText={setCallAttendedTime}
-              />
+            <View style={styles.dateTimeGroup}>
+              <Text style={styles.formLabel}>Call Attended On:</Text>
+              <View style={styles.dateTimeInputGroup}>
+                <Pressable 
+                  style={[styles.dateTimeInput, styles.dateInput]} 
+                  onPress={() => setShowAttendedDatePicker(true)}
+                >
+                  <Ionicons name="calendar-outline" size={18} color="#666" />
+                  <Text style={styles.dateTimeText}>{callAttendedDate || 'Select Date'}</Text>
+                </Pressable>
+                
+                <Pressable 
+                  style={[styles.dateTimeInput, styles.timeInput]} 
+                  onPress={() => setShowAttendedTimePicker(true)}
+                >
+                  <Ionicons name="time-outline" size={18} color="#666" />
+                  <Text style={styles.dateTimeText}>{callAttendedTime || 'Select Time'}</Text>
+                </Pressable>
+              </View>
             </View>
-            {hasSubmitAttempt && (!callAttendedDate || !callAttendedTime) && (
-              <Text style={styles.errorText}>Please enter date and time</Text>
+
+            {showAttendedDatePicker && (
+              <DatePickerModal
+                visible={showAttendedDatePicker}
+                onClose={() => setShowAttendedDatePicker(false)}
+                onSelect={setCallAttendedDate}
+                currentValue={callAttendedDate}
+              />
+            )}
+            
+            {showAttendedTimePicker && (
+              <DatePickerModal
+                visible={showAttendedTimePicker}
+                onClose={() => setShowAttendedTimePicker(false)}
+                onSelect={setCallAttendedTime}
+                currentValue={callAttendedTime}
+              />
             )}
 
             {/* Call Completed Date and Time */}
-            <Text style={styles.formLabel}>Call Completed on:</Text>
-            <View style={styles.dateTimeContainer}>
-              <TextInput
-                style={[
-                  styles.dateTimeInput,
-                  hasSubmitAttempt && !callCompletedDate ? styles.inputError : null
-                ]}
-                placeholder="YYYY-MM-DD"
-                value={callCompletedDate}
-                onChangeText={setCallCompletedDate}
-              />
-              <TextInput
-                style={[
-                  styles.dateTimeInput,
-                  hasSubmitAttempt && !callCompletedTime ? styles.inputError : null
-                ]}
-                placeholder="HH:MM"
-                value={callCompletedTime}
-                onChangeText={setCallCompletedTime}
-              />
+            <View style={styles.dateTimeGroup}>
+              <Text style={styles.formLabel}>Call Completed On:</Text>
+              <View style={styles.dateTimeInputGroup}>
+                <Pressable 
+                  style={[styles.dateTimeInput, styles.dateInput]} 
+                  onPress={() => setShowCompletedDatePicker(true)}
+                >
+                  <Ionicons name="calendar-outline" size={18} color="#666" />
+                  <Text style={styles.dateTimeText}>{callCompletedDate || 'Select Date'}</Text>
+                </Pressable>
+                
+                <Pressable 
+                  style={[styles.dateTimeInput, styles.timeInput]} 
+                  onPress={() => setShowCompletedTimePicker(true)}
+                >
+                  <Ionicons name="time-outline" size={18} color="#666" />
+                  <Text style={styles.dateTimeText}>{callCompletedTime || 'Select Time'}</Text>
+                </Pressable>
+              </View>
             </View>
-            {hasSubmitAttempt && (!callCompletedDate || !callCompletedTime) && (
-              <Text style={styles.errorText}>Please enter date and time</Text>
+
+            {showCompletedDatePicker && (
+              <DatePickerModal
+                visible={showCompletedDatePicker}
+                onClose={() => setShowCompletedDatePicker(false)}
+                onSelect={setCallCompletedDate}
+                currentValue={callCompletedDate}
+              />
+            )}
+            
+            {showCompletedTimePicker && (
+              <DatePickerModal
+                visible={showCompletedTimePicker}
+                onClose={() => setShowCompletedTimePicker(false)}
+                onSelect={setCallCompletedTime}
+                currentValue={callCompletedTime}
+              />
             )}
 
             {/* Part Replaced */}
@@ -580,13 +797,18 @@ export default function EnggComplaintDetails() {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Select Work Status</Text>
 
-                  {['Completed', 'Pending', 'Stand By', 'Under Observation'].map((status) => (
+                  {['Completed', 'Pending'].map((status) => (
                     <Pressable
                       key={status}
                       style={styles.modalItem}
                       onPress={() => {
                         setWorkStatus(status);
                         setShowStatusModal(false);
+                        
+                        // If Pending is selected, load the pending reasons
+                        if (status === 'Pending') {
+                          fetchPendingReasons();
+                        }
                       }}
                     >
                       <Text style={styles.modalItemText}>{status}</Text>
@@ -602,6 +824,62 @@ export default function EnggComplaintDetails() {
                 </View>
               </View>
             </Modal>
+
+            {workStatus === 'Pending' && (
+              <>
+                <Text style={styles.formLabel}>Pending Reason:</Text>
+                <Pressable
+                  style={[
+                    styles.dropdownButton,
+                    hasSubmitAttempt && workStatus === 'Pending' && !pendingReason ? styles.inputError : null
+                  ]}
+                  onPress={() => setShowPendingReasonModal(true)}
+                >
+                  <Text style={styles.dropdownButtonText}>
+                    {pendingReason || 'Select Pending Reason'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color="#666" />
+                </Pressable>
+                {hasSubmitAttempt && workStatus === 'Pending' && !pendingReason && (
+                  <Text style={styles.errorText}>Please select a pending reason</Text>
+                )}
+                
+                <Modal
+                  visible={showPendingReasonModal}
+                  transparent={true}
+                  animationType="slide"
+                  onRequestClose={() => setShowPendingReasonModal(false)}
+                >
+                  <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                      <Text style={styles.modalTitle}>Pending Reason</Text>
+                      {pendingReasons.length > 0 ? (
+                        pendingReasons.map((reason) => (
+                          <Pressable
+                            key={reason}
+                            style={styles.modalItem}
+                            onPress={() => {
+                              setPendingReason(reason);
+                              setShowPendingReasonModal(false);
+                            }}
+                          >
+                            <Text style={styles.modalItemText}>{reason}</Text>
+                          </Pressable>
+                        ))
+                      ) : (
+                        <Text style={styles.modalNoDataText}>Loading pending reasons...</Text>
+                      )}
+                      <Pressable
+                        style={styles.modalCloseButton}
+                        onPress={() => setShowPendingReasonModal(false)}
+                      >
+                        <Text style={styles.modalCloseText}>Close</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Modal>
+              </>
+            )}
 
             <Pressable style={styles.submitButton} onPress={handleSubmit}>
               <Text style={styles.submitButtonText}>Submit</Text>
@@ -1111,5 +1389,93 @@ const styles = StyleSheet.create({
   signaturePreviewImage: {
     width: '100%',
     height: 50, // fixed image height
+  },
+  pickerContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight: '70%',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  pickerHeader: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    flexDirection: 'column',
+  },
+  pickerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  pickerActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  pickerActionButton: {
+    padding: 8,
+  },
+  pickerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 20,
+  },
+  picker: {
+    flex: 1,
+    height: 200,
+  },
+  pickerCancelText: {
+    color: '#666',
+    fontSize: 16,
+  },
+  pickerDoneText: {
+    color: '#1a73e8',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalNoDataText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    padding: 15,
+  },
+  dateTimeGroup: {
+    marginBottom: 16,
+  },
+  dateTimeInputGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dateTimeInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#f9f9f9',
+  },
+  dateInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+  timeInput: {
+    flex: 0.7,
+  },
+  dateTimeText: {
+    marginLeft: 8,
+    color: '#333',
   },
 }); 

@@ -144,13 +144,12 @@ export const createHtmlTemplate = (data: any, title: string) => {
           body {
             font-family: 'Helvetica', Arial, sans-serif;
             color: #333;
-            padding: 20px;
+            padding: 8px;
           }
           .header {
             text-align: center;
-            padding-bottom: 20px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #ddd;
-            margin-bottom: 20px;
           }
           .logo {
             max-width: 200px;
@@ -158,29 +157,31 @@ export const createHtmlTemplate = (data: any, title: string) => {
           }
           h1 {
             color: #0066cc;
-            font-size: 24px;
-            margin-bottom: 5px;
+            font-size: 20px;
+            margin-bottom: 4px;
           }
           .document-date {
             color: #666;
-            font-size: 14px;
-            margin-bottom: 30px;
+            font-size: 12px;
+            margin-bottom: 10px;
           }
           table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 8px;
           }
           table td, table th {
             border: 1px solid #ddd;
-            padding: 12px 8px;
+            padding: 6px 4px;
+            font-size: 13px;
           }
           table tr:nth-child(even) {
             background-color: #f2f2f2;
           }
           .footer {
-            margin-top: 40px;
+            margin-top: 20px;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
           }
         </style>
