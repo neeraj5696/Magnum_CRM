@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import {
   Platform,
   StatusBar,
   TouchableOpacity,
+  PanResponder,
+  Dimensions,
+  Image,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -19,6 +22,9 @@ import { RootStackParamList, NavigationProps } from '../types';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { generatePdfFromHtml, generateDocxFromHtml } from '../../utils/documentGenerator';
 import { createComplaintReportTemplate } from '../../utils/complaintReportTemplate';
+import Svg, { Path, G } from 'react-native-svg';
+import * as FileSystem from 'expo-file-system';
+import ViewShot from 'react-native-view-shot';
 
 type EnggComplaintDetailsRouteProp = RouteProp<RootStackParamList, 'Engineer/EnggComplaintDetails'>;
 
@@ -48,6 +54,92 @@ export default function EnggComplaintDetails() {
   const [causeProblem, setCauseProblem] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
   const [materialTakenOut, setMaterialTakenOut] = useState('');
+  const [customerComment, setCustomerComment] = useState('');
+  const [customerSignature, setCustomerSignature] = useState<string | null>(null);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
+  
+  // For signature drawing
+  const [paths, setPaths] = useState<Array<string>>([]);
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const signatureRef = useRef<any>(null);
+
+  // Get dimensions for signature pad
+  const screenWidth = Dimensions.get('window').width;
+  const padWidth = Math.min(screenWidth - 80, 500);
+  const padHeight = 200;
+  
+  // PanResponder for signature drawing
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        const { locationX, locationY } = evt.nativeEvent;
+        setCurrentPath(`M ${locationX} ${locationY}`);
+      },
+      onPanResponderMove: (evt) => {
+        const { locationX, locationY } = evt.nativeEvent;
+        setCurrentPath(prevPath => `${prevPath} L ${locationX} ${locationY}`);
+      },
+      onPanResponderRelease: () => {
+        // Save the current path when touch ends
+        if (currentPath) {
+          setPaths(prevPaths => [...prevPaths, currentPath]);
+          setCurrentPath(''); // Reset current path
+        }
+      },
+    })
+  ).current;
+
+  // Clear signature
+  const clearSignature = () => {
+    setPaths([]);
+    setCurrentPath('');
+    setCustomerSignature(null);
+  };
+
+  // Save signature
+  const saveSignature = async () => {
+    if (paths.length > 0 || currentPath) {
+      try {
+        if (signatureRef.current) {
+          // Properly format options for ViewShot
+          const options = {
+            format: 'jpg',
+            quality: 0.9,
+            result: 'data-uri'  // Ensure we get data URI format directly
+          };
+          
+          // Capture the signature with proper options
+          const capturedSignature = await signatureRef.current.capture(options);
+          console.log('Signature captured:', capturedSignature.substring(0, 30) + '...');
+          
+          setCustomerSignature(capturedSignature);
+          setShowSignaturePad(false);
+          
+          // Log success for debugging
+          console.log('Signature saved successfully');
+        } else {
+          Alert.alert('Error', 'Failed to capture signature');
+        }
+      } catch (error) {
+        console.error('Error capturing signature:', error);
+        Alert.alert('Error', 'Failed to capture signature');
+      }
+    } else {
+      Alert.alert('Error', 'Please provide a signature');
+    }
+  };
+
+  // Open signature pad
+  const openSignaturePad = () => {
+    // Reset paths when opening the signature pad if there's no existing signature
+    if (!customerSignature) {
+      setPaths([]);
+      setCurrentPath('');
+    }
+    setShowSignaturePad(true);
+  };
 
   // Handle form submission
   const handleSubmit = async () => {
@@ -55,6 +147,11 @@ export default function EnggComplaintDetails() {
 
     if (!workStatus) {
       Alert.alert('Error', 'Please select a work status');
+      return;
+    }
+
+    if (!customerSignature) {
+      Alert.alert('Error', 'Please provide customer signature');
       return;
     }
 
@@ -89,6 +186,10 @@ export default function EnggComplaintDetails() {
 
   // Handle final submission with document generation
   const handleFinalSubmit = async () => {
+    // Log signature data for debugging
+    console.log('Signature data length:', 
+      customerSignature ? customerSignature.length : 'No signature');
+    
     const formData = {
       complaintNo,
       clientName,
@@ -104,6 +205,8 @@ export default function EnggComplaintDetails() {
       causeProblem,
       diagnosis,
       materialTakenOut,
+      customerComment,
+      customerSignature,
       submittedAt: new Date().toISOString(),
       // Add additional fields from route.params
       systemName: route.params.SYSTEM_NAME || '',
@@ -364,6 +467,36 @@ export default function EnggComplaintDetails() {
               onChangeText={setMaterialTakenOut}
             />
 
+            {/* Customer Comment */}
+            <Text style={styles.formLabel}>Customer Comment:</Text>
+            <TextInput
+              style={[styles.textInput, { height: 100 }]}
+              multiline
+              numberOfLines={4}
+              placeholder="Enter customer's comment here..."
+              value={customerComment}
+              onChangeText={setCustomerComment}
+            />
+
+            {/* Customer Signature */}
+            <Text style={styles.formLabel}>Customer Signature:</Text>
+            <Pressable
+              style={styles.signatureBox}
+              onPress={openSignaturePad}
+            >
+              {customerSignature ? (
+                <View style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                  <Image 
+                    source={{ uri: customerSignature }}
+                    style={{ width: '80%', height: 70, resizeMode: 'contain' }}
+                  />
+                  <Text style={styles.signatureText}>Signature Saved ✓</Text>
+                </View>
+              ) : (
+                <Text style={styles.signaturePlaceholder}>Tap to add signature</Text>
+              )}
+            </Pressable>
+
             {/* Remarks */}
             <Text style={styles.formLabel}>Remarks:</Text>
             <TextInput
@@ -501,6 +634,74 @@ export default function EnggComplaintDetails() {
           </View>
         </Modal>
 
+        {/* Signature Pad Modal */}
+        <Modal
+          visible={showSignaturePad}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowSignaturePad(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.signatureModalContent}>
+              <Text style={styles.modalTitle}>Customer Signature</Text>
+              
+              <ViewShot 
+                ref={signatureRef} 
+                style={styles.signaturePad} 
+                options={{ format: 'jpg', quality: 0.9, result: 'data-uri' }}
+              >
+                <View style={styles.signatureBackground}>
+                  <Svg height="100%" width="100%" viewBox={`0 0 ${padWidth} ${padHeight}`}>
+                    <G>
+                      {/* Draw all saved paths */}
+                      {paths.map((path, index) => (
+                        <Path
+                          key={`path-${index}`}
+                          d={path}
+                          stroke="black"
+                          strokeWidth={2}
+                          fill="none"
+                        />
+                      ))}
+                      
+                      {/* Draw current path */}
+                      {currentPath ? (
+                        <Path
+                          d={currentPath}
+                          stroke="black"
+                          strokeWidth={2}
+                          fill="none"
+                        />
+                      ) : null}
+                    </G>
+                  </Svg>
+                </View>
+              </ViewShot>
+              
+              {/* Touch handler overlay for signature pad */}
+              <View 
+                style={[styles.signatureOverlay]}
+                {...panResponder.panHandlers}
+              />
+
+              <View style={styles.signatureButtons}>
+                <TouchableOpacity
+                  style={styles.signatureButton}
+                  onPress={clearSignature}
+                >
+                  <Text style={styles.signatureButtonText}>Clear</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.signatureButton, styles.signatureButtonPrimary]}
+                  onPress={saveSignature}
+                >
+                  <Text style={[styles.signatureButtonText, { color: '#fff' }]}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -789,5 +990,77 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  signatureBox: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    backgroundColor: '#f9f9f9',
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signatureText: {
+    color: '#4CAF50',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  signaturePlaceholder: {
+    color: '#666',
+    fontSize: 16,
+  },
+  signatureModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxWidth: 500,
+  },
+  signaturePad: {
+    height: 200,
+    width: '100%',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    marginVertical: 20,
+    overflow: 'hidden',
+  },
+  signatureBackground: {
+    backgroundColor: '#fff',
+    height: '100%',
+    width: '100%',
+  },
+  signatureOverlay: {
+    position: 'absolute',
+    top: 20 + 20, // modalTitle height + marginVertical
+    left: 20,
+    right: 20,
+    height: 200,
+    backgroundColor: 'transparent',
+  },
+  signatureButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  signatureButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  signatureButtonPrimary: {
+    backgroundColor: '#1a73e8',
+    borderColor: '#1a73e8',
+  },
+  signatureButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
   },
 }); 

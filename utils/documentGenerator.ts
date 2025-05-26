@@ -12,11 +12,19 @@ import { format } from 'date-fns';
  */
 export const generatePdfFromHtml = async (htmlContent: string, fileName: string) => {
   try {
-    // Generate PDF using expo-print
-    const { uri } = await Print.printToFileAsync({
+    // Add base64 image handling options to ensure images render correctly
+    const options = {
       html: htmlContent,
       base64: false,
-    });
+      // This helps with image rendering
+      width: 612, // Standard US Letter width in points (8.5 x 72)
+      height: 792, // Standard US Letter height in points (11 x 72)
+    };
+
+    console.log('Generating PDF with enhanced image support...');
+    
+    // Generate PDF using expo-print
+    const { uri } = await Print.printToFileAsync(options);
     
     if (Platform.OS === 'web') {
       await saveWebFile(uri, `${fileName}.pdf`);

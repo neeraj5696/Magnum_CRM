@@ -33,7 +33,16 @@ export const createComplaintReportTemplate = (data: any) => {
     causeProblem = '',
     diagnosis = '',
     materialTakenOut = '',
+    // Customer input fields
+    customerComment = '',
+    customerSignature = '',
   } = data;
+
+  // Process the signature for embedding in HTML
+  const processedSignature = customerSignature || '';
+  console.log('Signature data length:', processedSignature.length > 100 ? 
+    processedSignature.length + ' chars (valid)' : 
+    processedSignature.length + ' chars (may be invalid)');
 
   // Format the attended and completed dates/times
   const attendedDateTime = callAttendedDate && callAttendedTime 
@@ -291,6 +300,45 @@ export const createComplaintReportTemplate = (data: any) => {
             border: 1px solid #f9d9d7;
           }
           
+          .signature-area {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px dashed var(--border-color);
+            text-align: center;
+            font-style: italic;
+            color: var(--text-secondary);
+          }
+          
+          .signature-done {
+            color: var(--success-color);
+            font-weight: 600;
+            font-style: normal;
+          }
+          
+          .customer-comment {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 6px;
+            border-left: 3px solid var(--warning-color);
+          }
+          
+          .comment-heading {
+            font-weight: 600;
+            color: var(--warning-color);
+            margin-bottom: 10px;
+          }
+          
+          .signature-image {
+            max-width: 100%;
+            max-height: 100px;
+            border-bottom: 1px solid #ccc;
+            margin-top: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+          }
+          
           @media print {
             body {
               background-color: white;
@@ -411,9 +459,19 @@ export const createComplaintReportTemplate = (data: any) => {
             </div>
             
             <div class="remark-section">
-              <div class="section-title">Remarks</div>
+              <div class="section-title">Engineer's Remarks</div>
               <div class="remark-text">${remark || 'No remarks provided.'}</div>
             </div>
+
+            ${customerComment ? `
+            <div class="remark-section" style="margin-top: 20px;">
+              <div class="section-title">Customer's Comment</div>
+              <div class="customer-comment">
+                <div class="comment-heading">Customer Feedback:</div>
+                <div>${customerComment}</div>
+              </div>
+            </div>
+            ` : ''}
           </div>
           
           <div class="signatures">
@@ -423,7 +481,14 @@ export const createComplaintReportTemplate = (data: any) => {
             </div>
             <div class="signature-box">
               <div class="signature-label">Client's Signature</div>
-              <div class="signature-placeholder">Client's signature</div>
+              ${processedSignature ? 
+                `<div style="text-align: center;">
+                   <img src="${processedSignature}" 
+                        alt="Client's signature" 
+                        class="signature-image" />
+                 </div>` : 
+                `<div class="signature-placeholder">Client's signature</div>`
+              }
             </div>
           </div>
           
