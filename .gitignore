@@ -31,8 +31,12 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
 
 # typescript
 *.tsbuildinfo
 
 app-example
+
+# Local config files with sensitive data
+src/config/cloudinary.local.js

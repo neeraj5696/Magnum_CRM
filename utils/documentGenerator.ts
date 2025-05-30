@@ -26,6 +26,7 @@ export const generatePdfFromHtml = async (htmlContent: string, fileName: string)
     
     // Generate PDF using expo-print
     const { uri } = await Print.printToFileAsync(options);
+    console.log('PDF generated at temporary location:', uri);
     
     // Store the PDF locally
     const localUri = Platform.OS === 'web' 
@@ -34,10 +35,19 @@ export const generatePdfFromHtml = async (htmlContent: string, fileName: string)
     
     if (Platform.OS !== 'web') {
       // For mobile platforms, copy the file to app's document directory
+      console.log('Copying PDF from temp to document directory...');
       await FileSystem.copyAsync({
         from: uri,
         to: localUri
       });
+      
+      // Verify the file exists
+      const fileInfo = await FileSystem.getInfoAsync(localUri);
+      console.log('File info after copy:', fileInfo);
+      
+      if (!fileInfo.exists) {
+        throw new Error('Failed to save PDF to document directory');
+      }
     }
 
     console.log('PDF stored locally at:', localUri);
