@@ -22,6 +22,7 @@ import { RootStackParamList, NavigationProps } from '../types';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { generatePdfFromHtml } from '../../utils/documentGenerator';
 import { createComplaintReportTemplate } from '../../utils/complaintReportTemplate';
+import uploadPDFToCloudinary from '../../src/utils/cloudinaryUpload';
 import Svg, { Path, G } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -458,45 +459,45 @@ export default function EnggComplaintDetails() {
   const handleSubmit = async () => {
     setHasSubmitAttempt(true);
 
-    if (!workStatus) {
-      Alert.alert('Error', 'Please select a work status');
-      return;
-    }
+    // if (!workStatus) {
+    //   Alert.alert('Error', 'Please select a work status');
+    //   return;
+    // }
 
-    if (workStatus === 'Pending' && !pendingReason) {
-      Alert.alert('Error', 'Please select a pending reason');
-      return;
-    }
+    // if (workStatus === 'Pending' && !pendingReason) {
+    //   Alert.alert('Error', 'Please select a pending reason');
+    //   return;
+    // }
 
-    if (!customerSignature) {
-      Alert.alert('Error', 'Please provide customer signature');
-      return;
-    }
+    // if (!customerSignature) {
+    //   Alert.alert('Error', 'Please provide customer signature');
+    //   return;
+    // }
 
-    if (!faultReported) {
-      Alert.alert('Error', 'Please enter fault reported');
-      return;
-    }
+    // if (!faultReported) {
+    //   Alert.alert('Error', 'Please enter fault reported');
+    //   return;
+    // }
 
-    if (!typeOfCall) {
-      Alert.alert('Error', 'Please select type of call');
-      return;
-    }
+    // if (!typeOfCall) {
+    //   Alert.alert('Error', 'Please select type of call');
+    //   return;
+    // }
 
-    if (!callAttendedDate || !callAttendedTime) {
-      Alert.alert('Error', 'Please enter call attended date and time');
-      return;
-    }
+    // if (!callAttendedDate || !callAttendedTime) {
+    //   Alert.alert('Error', 'Please enter call attended date and time');
+    //   return;
+    // }
 
-    if (!callCompletedDate || !callCompletedTime) {
-      Alert.alert('Error', 'Please enter call completed date and time');
-      return;
-    }
+    // if (!callCompletedDate || !callCompletedTime) {
+    //   Alert.alert('Error', 'Please enter call completed date and time');
+    //   return;
+    // }
 
-    if (!remark.trim()) {
-      Alert.alert('Error', 'Please add a remark');
-      return;
-    }
+    // if (!remark.trim()) {
+    //   Alert.alert('Error', 'Please add a remark');
+    //   return;
+    // }
 
     // Show format selection modal
     setShowDocFormatModal(true);
@@ -539,30 +540,37 @@ export default function EnggComplaintDetails() {
       const htmlContent = createComplaintReportTemplate(formData);
       const fileName = `complaint_${complaintNo}_report`;
 
-      let success = false;
-      success = await generatePdfFromHtml(htmlContent, fileName);
-
-      if (success) {
-        //  console.log('PDF generated successfully');
+      const result = await generatePdfFromHtml(htmlContent, fileName);
+      
+      if (result.success && result.localUri) {
+        // Upload the generated PDF to Cloudinary
+        try {
+          const uploadResult = await uploadPDFToCloudinary(result.localUri);
+          console.log('PDF uploaded to Cloudinary:', uploadResult);
+          
+          Alert.alert('Success', 'Data submitted, PDF generated and uploaded successfully', [
+            {
+              text: 'OK',
+              onPress: () => {
+                navigation.navigate('Engineer/EnggListofcomplaint', {
+                  username: route.params.username,
+                  password: route.params.password
+                });
+              }
+            }
+          ]);
+        } catch (uploadError) {
+          console.error('Error uploading to Cloudinary:', uploadError);
+          Alert.alert('Warning', 'PDF generated but failed to upload to Cloudinary. Please try again later.');
+        }
       } else {
         console.error('Failed to generate PDF');
+        Alert.alert('Error', 'Failed to generate PDF document. Please try again.');
       }
     } catch (error) {
       console.error('Error in PDF generation:', error);
+      Alert.alert('Error', 'Failed to process document. Please try again.');
     }
-
-    console.log('formData', formData.toString());
-    Alert.alert('Success', 'Data submitted and PDF report generated successfully', [
-      {
-        text: 'OK',
-        onPress: () => {
-          navigation.navigate('Engineer/EnggListofcomplaint', {
-            username: route.params.username,
-            password: route.params.password
-          });
-        }
-      }
-    ]);
   };
 
   // Lock orientation to landscape when signature pad opens, unlock when closes

@@ -6,9 +6,10 @@ import { Alert } from 'react-native';
 import { format } from 'date-fns';
 
 /**
- * Generate PDF from HTML content and download it
+ * Generate PDF from HTML content and store it locally
  * @param {string} htmlContent HTML string for PDF content
  * @param {string} fileName Name of the file to save (without extension)
+ * @returns {Promise<{success: boolean, localUri?: string}>} Result of the operation with local file URI
  */
 export const generatePdfFromHtml = async (htmlContent: string, fileName: string) => {
   try {
@@ -21,23 +22,43 @@ export const generatePdfFromHtml = async (htmlContent: string, fileName: string)
       height: 792, // Standard US Letter height in points (11 x 72)
     };
 
-    console.log('Generating PDF with enhanced image support...');
+    console.log('Generating PDF...');
     
     // Generate PDF using expo-print
     const { uri } = await Print.printToFileAsync(options);
     
+    // Store the PDF locally
+    const localUri = Platform.OS === 'web' 
+      ? uri // For web, the uri is already a blob URL
+      : `${FileSystem.documentDirectory}${fileName}.pdf`; // For mobile, save to app's document directory
+    
+    if (Platform.OS !== 'web') {
+      // For mobile platforms, copy the file to app's document directory
+      await FileSystem.copyAsync({
+        from: uri,
+        to: localUri
+      });
+    }
+
+    console.log('PDF stored locally at:', localUri);
+    
+    // Handle file sharing/download based on platform
     if (Platform.OS === 'web') {
       await saveWebFile(uri, `${fileName}.pdf`);
     } else {
-      // For mobile platforms, use sharing
       await shareMobileFile(uri, `${fileName}.pdf`);
     }
     
-    return true;
+    return {
+      success: true,
+      localUri: localUri
+    };
   } catch (error) {
     console.error('Error generating PDF:', error);
     Alert.alert('Error', 'Failed to generate PDF document. Please try again.');
-    return false;
+    return {
+      success: false
+    };
   }
 };
 
