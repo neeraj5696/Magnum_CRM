@@ -20,7 +20,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList, NavigationProps } from '../types';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { generatePdfFromHtml, generateDocxFromHtml } from '../../utils/documentGenerator';
+import { generatePdfFromHtml } from '../../utils/documentGenerator';
 import { createComplaintReportTemplate } from '../../utils/complaintReportTemplate';
 import Svg, { Path, G } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
@@ -536,29 +536,23 @@ export default function EnggComplaintDetails() {
 
     // Generate document from form data with the specialized template
     try {
-    //  console.log(`Generating ${documentFormat.toUpperCase()} from form data...`);
       const htmlContent = createComplaintReportTemplate(formData);
       const fileName = `complaint_${complaintNo}_report`;
 
       let success = false;
-
-      if (documentFormat === 'pdf') {
-        success = await generatePdfFromHtml(htmlContent, fileName);
-      } else {
-        success = await generateDocxFromHtml(htmlContent, fileName);
-      }
+      success = await generatePdfFromHtml(htmlContent, fileName);
 
       if (success) {
-      //  console.log(`${documentFormat.toUpperCase()} generated successfully`);
+        //  console.log('PDF generated successfully');
       } else {
-        console.error(`Failed to generate ${documentFormat.toUpperCase()}`);
+        console.error('Failed to generate PDF');
       }
     } catch (error) {
-      console.error(`Error in ${documentFormat.toUpperCase()} generation:`, error);
+      console.error('Error in PDF generation:', error);
     }
 
     console.log('formData', formData.toString());
-    Alert.alert('Success', `Data submitted and ${documentFormat.toUpperCase()} report generated successfully`, [
+    Alert.alert('Success', 'Data submitted and PDF report generated successfully', [
       {
         text: 'OK',
         onPress: () => {
@@ -1098,21 +1092,6 @@ export default function EnggComplaintDetails() {
                   documentFormat === 'pdf' && styles.formatOptionTextSelected
                 ]}>
                   PDF Format
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.formatOption,
-                  documentFormat === 'docx' && styles.formatOptionSelected
-                ]}
-                onPress={() => setDocumentFormat('docx')}
-              >
-                <Text style={[
-                  styles.formatOptionText,
-                  documentFormat === 'docx' && styles.formatOptionTextSelected
-                ]}>
-                  DOCX Format (Word)
                 </Text>
               </TouchableOpacity>
 
