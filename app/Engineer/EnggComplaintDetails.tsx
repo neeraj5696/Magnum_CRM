@@ -327,6 +327,9 @@ export default function EnggComplaintDetails() {
   const { complaintNo, clientName } = route.params;
   const insets = useSafeAreaInsets();
 
+  // Debug log
+  console.log('S_SERVDT value:', route.params.S_SERVDT);
+
   // Form field states
   const [remark, setRemark] = useState('');
   const [workStatus, setWorkStatus] = useState('');
@@ -510,12 +513,15 @@ export default function EnggComplaintDetails() {
       customerSignature ? customerSignature.length : 'No signature');
 
     const formData = {
+      // Basic complaint information
       complaintNo,
       clientName,
       workStatus,
       remark,
-      faultReported,
-      typeOfCall,
+      
+      // Form fields
+      faultReported: route.params.S_SERVDT || '',
+      typeOfCall: route.params.Task_Type || '',
       callAttendedDate,
       callAttendedTime,
       callCompletedDate,
@@ -526,13 +532,37 @@ export default function EnggComplaintDetails() {
       materialTakenOut,
       customerComment,
       customerSignature,
-      submittedAt: new Date().toISOString(),
-      // Add additional fields from route.params
+      
+      // Additional fields from route.params
       systemName: route.params.SYSTEM_NAME || '',
       assignDate: route.params.Assign_Date || '',
       location: route.params.Address || '',
       taskType: route.params.Task_Type || '',
       status: route.params.status || '',
+      S_SERVDT: route.params.S_SERVDT || '',
+      S_assignedengg: route.params.Engineer || '',
+      
+      // Pending status information
+      pendingReason: workStatus === 'Pending' ? pendingReason : '',
+      
+      // Timestamps
+      submittedAt: new Date().toISOString(),
+      
+      // Debug information
+      debug: {
+        workStatus,
+        pendingReason,
+        hasSignature: !!customerSignature,
+        formFields: {
+          callAttended: !!callAttendedDate && !!callAttendedTime,
+          callCompleted: !!callCompletedDate && !!callCompletedTime,
+          hasPartReplaced: !!partReplaced,
+          hasCauseProblem: !!causeProblem,
+          hasDiagnosis: !!diagnosis,
+          hasMaterialTakenOut: !!materialTakenOut,
+          hasCustomerComment: !!customerComment
+        }
+      }
     };
 
     // Generate document from form data with the specialized template
@@ -720,10 +750,7 @@ export default function EnggComplaintDetails() {
               <Text style={styles.label}>Remark:</Text>
               <Text style={styles.value}>{route.params.Remark}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Status:</Text>
-              <Text style={styles.value}>{route.params.status}</Text>
-            </View>
+           
           </View>
 
           <View style={styles.formSectionBox}>
@@ -731,36 +758,22 @@ export default function EnggComplaintDetails() {
 
             {/* Fault Reported */}
             <Text style={styles.formLabel}>Fault Reported:</Text>
-            <TextInput
-              style={[
-                styles.textInput,
-                hasSubmitAttempt && !faultReported ? styles.inputError : null
-              ]}
-              placeholder="Enter fault reported..."
-              value={faultReported}
-              onChangeText={setFaultReported}
-            />
-            {hasSubmitAttempt && !faultReported && (
-              <Text style={styles.errorText}>Please enter fault reported</Text>
-            )}
+            <View style={styles.dateTimeInputGroup}>
+              <View style={[styles.dateTimeInput, { flex: 1 }]}>
+                <Ionicons name="time-outline" size={18} color="#666" />
+                <Text style={[styles.dateTimeText, { color: '#333', fontWeight: '500' }]}>
+                  {route.params.S_SERVDT || 'Not available'}
+                </Text>
+              </View>
+            </View>
 
             {/* Type of Call Dropdown */}
             <Text style={styles.formLabel}>Type of Call:</Text>
-            <Pressable
-              style={[
-                styles.dropdownButton,
-                hasSubmitAttempt && !typeOfCall ? styles.inputError : null
-              ]}
-              onPress={() => setShowTypeOfCallModal(true)}
-            >
-              <Text style={styles.dropdownButtonText}>
-                {typeOfCall || 'Select Type of Call'}
+            <View style={[styles.dropdownButton, { backgroundColor: '#f5f5f5' }]}>
+              <Text style={[styles.dropdownButtonText, { color: '#333' }]}>
+                {route.params.Task_Type || 'Not available'}
               </Text>
-              <Ionicons name="chevron-down" size={20} color="#666" />
-            </Pressable>
-            {hasSubmitAttempt && !typeOfCall && (
-              <Text style={styles.errorText}>Please select type of call</Text>
-            )}
+            </View>
 
             <Modal
               visible={showTypeOfCallModal}
@@ -878,43 +891,47 @@ export default function EnggComplaintDetails() {
             {/* Part Replaced */}
             <Text style={styles.formLabel}>Part Replaced/Stand by (if any):</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { height: 40 }]}
               placeholder="Enter parts replaced..."
               value={partReplaced}
               onChangeText={setPartReplaced}
+              multiline={false}
             />
 
             {/* Cause of Problem */}
             <Text style={styles.formLabel}>Cause of Problem:</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { height: 40 }]}
               placeholder="Enter cause of problem..."
               value={causeProblem}
               onChangeText={setCauseProblem}
+              multiline={false}
             />
 
             {/* Diagnosis */}
             <Text style={styles.formLabel}>Diagnosis:</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { height: 40 }]}
               placeholder="Enter diagnosis..."
               value={diagnosis}
               onChangeText={setDiagnosis}
+              multiline={false}
             />
 
             {/* Material Taken Out */}
             <Text style={styles.formLabel}>Material Taken Out (if any):</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { height: 40 }]}
               placeholder="Enter materials taken out..."
               value={materialTakenOut}
               onChangeText={setMaterialTakenOut}
+              multiline={false}
             />
 
             {/* Customer Comment */}
             <Text style={styles.formLabel}>Customer Comment:</Text>
             <TextInput
-              style={[styles.textInput]}
+              style={[styles.textInput, { height: 80 }]}
               multiline
               numberOfLines={4}
               placeholder="Enter customer's comment here..."
@@ -941,23 +958,6 @@ export default function EnggComplaintDetails() {
                 <Text style={styles.signaturePlaceholder}>Tap to add signature</Text>
               )}
             </Pressable>
-
-            {/* Remarks */}
-            <Text style={styles.formLabel}>Remarks:</Text>
-            <TextInput
-              style={[
-                styles.textInput,
-                hasSubmitAttempt && !remark.trim() ? styles.inputError : null
-              ]}
-              multiline
-              numberOfLines={4}
-              placeholder="Enter your remarks here..."
-              value={remark}
-              onChangeText={setRemark}
-            />
-            {hasSubmitAttempt && !remark.trim() && (
-              <Text style={styles.errorText}>Please add a remark</Text>
-            )}
 
             {/* Status Dropdown */}
             <Text style={styles.formLabel}>Status:</Text>
@@ -1298,7 +1298,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f9f9f9',
     color: '#333',
-    height: 50, // set to whatever height you want
+    height: 20, // set to whatever height you want
   },
   dropdownButton: {
     flexDirection: 'row',

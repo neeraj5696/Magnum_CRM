@@ -144,13 +144,14 @@ export default function EnggListofcomplaint() {
           SYSTEM_NAME: String(item.SYSTEM_NAME),
           username: String(username),
           password: String(password),
+          S_SERVDT: String(item.S_SERVDT),
         })
       }
     >
       <View style={styles.row}>
         <View style={styles.labelContainer}>
           <MaterialIcons name="receipt" size={18} color="#0066CC" style={styles.labelIcon} />
-          <Text style={styles.label}>Complaint Number : </Text>
+          <Text style={styles.label}>Complaint No : </Text>
         </View>
         <Text style={styles.text}>{item.S_SERVNO}</Text>
       </View>
@@ -185,10 +186,15 @@ export default function EnggListofcomplaint() {
         ]}>{item.S_jobstatus}</Text>
       </View>
 
-      <View style={styles.datetimeContainer}>
-        <MaterialIcons name="access-time" size={16} color="#888" style={styles.datetimeIcon} />
-        <Text style={styles.datetime}>{item.S_SERVDT}</Text>
+      <View style={styles.row}>
+        <View style={styles.labelContainer}>
+          <MaterialIcons name="schedule" size={18} color="#0066CC" style={styles.labelIcon} />
+          <Text style={styles.label}>Fault Reported : </Text>
+        </View>
+        <Text style={styles.grayText}>{item.S_SERVDT}</Text>
       </View>
+
+      
     </Pressable>
   );
 

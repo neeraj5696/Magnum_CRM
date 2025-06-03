@@ -11,6 +11,11 @@ export const createComplaintReportTemplate = (data: any) => {
     ? format(new Date(data.submittedAt), 'dd MMM yyyy hh:mm a')
     : format(new Date(), 'dd MMM yyyy hh:mm a');
 
+  // Format fault reported date
+  const formattedFaultReported = data.S_SERVDT
+    ? format(new Date(data.S_SERVDT), 'dd MMM yyyy hh:mm a')
+    : 'N/A';
+
   // Extract client details and form data
   const {
     complaintNo = '',
@@ -22,9 +27,8 @@ export const createComplaintReportTemplate = (data: any) => {
     location = '',
     status = '',
     taskType = '',
-    // New form fields
-    faultReported = '',
-    typeOfCall = '',
+    S_SERVDT = '',
+    S_assignedengg = '',
     callAttendedDate = '',
     callAttendedTime = '',
     callCompletedDate = '',
@@ -53,6 +57,9 @@ export const createComplaintReportTemplate = (data: any) => {
     ? `${callCompletedDate} ${callCompletedTime}`
     : 'Not specified';
 
+  // Debug log for assigned engineer
+  console.log('Assigned Engineer value:', S_assignedengg);
+
   return `
     <!DOCTYPE html>
     <html>
@@ -63,17 +70,19 @@ export const createComplaintReportTemplate = (data: any) => {
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
           
           :root {
-            --primary-color: #0078d4;
-            --primary-dark: #005a9e;
+            --primary-color: #1a73e8;
+            --primary-dark: #0d47a1;
             --secondary-color: #2b88d8;
-            --text-primary: #323130;
-            --text-secondary: #605e5c;
-            --border-color: #edebe9;
-            --background-light: #f3f2f1;
-            --success-color: #107c10;
-            --warning-color: #ff8c00;
-            --error-color: #d13438;
-            --info-color: #0078d4;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+            --background-light: #f8f9fa;
+            --success-color: #0f9d58;
+            --warning-color: #f4b400;
+            --error-color: #d93025;
+            --info-color: #1a73e8;
+            --section-bg: #ffffff;
+            --header-gradient: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
           }
           
           body {
@@ -82,108 +91,84 @@ export const createComplaintReportTemplate = (data: any) => {
             margin: 0;
             padding: 0;
             background-color: var(--background-light);
-            line-height: 1.5;
+            line-height: 1.6;
           }
           
           .container {
-            max-width: 850px;
+            max-width: 800px;
             margin: 10px auto;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            background-color: var(--section-bg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
             overflow: hidden;
           }
           
           .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            background: var(--header-gradient);
             color: white;
-            padding: 16px 10px 18px 10px;
+            padding: 16px 32px;
             text-align: center;
             position: relative;
-          }
-          
-          .header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--success-color), var(--info-color), var(--warning-color));
+            margin: 0;
           }
           
           .company-name {
-            font-size: 22px;
+            font-size: 28px;
             font-weight: 700;
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
           }
           
           .document-title {
-            font-size: 15px;
-            margin-top: 4px;
+            font-size: 18px;
+            margin-top: 8px;
             font-weight: 400;
             opacity: 0.9;
           }
           
           .complaint-number {
-            background-color: var(--background-light);
-            padding: 8px 10px;
+            background-color: var(--section-bg);
+            padding: 12px 32px;
             text-align: center;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--primary-color);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
-          }
-          
-          .complaint-number::before {
-            content: '📋';
-            margin-right: 8px;
-            font-size: 18px;
+            margin: 0;
           }
           
           .section {
-            padding: 14px 14px 10px 14px;
+            padding: 16px 32px;
             border-bottom: 1px solid var(--border-color);
-          }
-          
-          .section:last-child {
-            border-bottom: none;
+            background-color: var(--section-bg);
           }
           
           .section-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--primary-color);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             display: flex;
             align-items: center;
-          }
-          
-          .section-title::before {
-            content: '';
-            display: inline-block;
-            width: 4px;
-            height: 16px;
-            background-color: var(--primary-color);
-            margin-right: 8px;
-            border-radius: 2px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--primary-color);
           }
           
           .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 12px;
+            padding: 0;
           }
           
           .info-item {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             display: flex;
             flex-direction: column;
           }
@@ -201,17 +186,18 @@ export const createComplaintReportTemplate = (data: any) => {
             font-weight: 400;
             font-size: 14px;
             color: var(--text-primary);
-            padding: 6px 8px;
+            padding: 8px 12px;
             background-color: var(--background-light);
-            border-radius: 4px;
+            border-radius: 6px;
             border-left: 3px solid var(--primary-color);
+            margin-left: 0;
           }
           
           .remark-section {
             background-color: var(--background-light);
-            padding: 10px 10px 8px 10px;
-            border-radius: 6px;
-            margin-top: 10px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin: 12px 0 0 0;
             border: 1px solid var(--border-color);
           }
           
@@ -219,58 +205,49 @@ export const createComplaintReportTemplate = (data: any) => {
             font-style: italic;
             color: var(--text-secondary);
             line-height: 1.6;
-            padding: 6px;
-            background-color: white;
-            border-radius: 4px;
+            padding: 12px;
+            background-color: var(--section-bg);
+            border-radius: 6px;
             border-left: 3px solid var(--info-color);
           }
           
           .signatures {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            padding: 16px 10px 10px 10px;
+            gap: 20px;
+            padding: 16px 32px;
             background-color: var(--background-light);
+            margin: 0;
           }
           
           .signature-box {
-            background-color: white;
-            padding: 10px;
-            border-radius: 6px;
+            background-color: var(--section-bg);
+            padding: 12px;
+            border-radius: 8px;
             text-align: center;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           }
           
           .signature-label {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-secondary);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-weight: 500;
           }
           
-          .signature-placeholder {
-            color: var(--text-secondary);
-            font-style: italic;
-            padding: 10px;
-            border: 1px dashed var(--border-color);
-            border-radius: 4px;
-            margin-top: 6px;
-          }
-          
-          .footer {
-            background-color: var(--background-light);
-            padding: 10px 0 6px 0;
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-secondary);
-            border-top: 1px solid var(--border-color);
+          .signature-image {
+            max-width: 100%;
+            max-height: 120px;
+            border-bottom: 1px solid var(--border-color);
+            margin: 12px auto;
+            display: block;
           }
           
           .status-tag {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -288,69 +265,69 @@ export const createComplaintReportTemplate = (data: any) => {
             border: 1px solid #ffe7a3;
           }
           
-          .status-standby {
-            background-color: #e6f4ff;
-            color: var(--info-color);
-            border: 1px solid #c6e0ff;
-          }
-          
-          .status-observation {
-            background-color: #fce8e6;
-            color: var(--error-color);
-            border: 1px solid #f9d9d7;
-          }
-          
-          .signature-area {
-            margin-top: 15px;
-            padding: 10px;
-            border: 1px dashed var(--border-color);
+          .footer {
+            background-color: var(--background-light);
+            padding: 12px 32px;
             text-align: center;
-            font-style: italic;
+            font-size: 12px;
             color: var(--text-secondary);
-          }
-          
-          .signature-done {
-            color: var(--success-color);
-            font-weight: 600;
-            font-style: normal;
+            border-top: 1px solid var(--border-color);
+            margin: 0;
           }
           
           .customer-comment {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: white;
-            border-radius: 6px;
+            margin-top: 16px;
+            padding: 12px;
+            background-color: var(--section-bg);
+            border-radius: 8px;
             border-left: 3px solid var(--warning-color);
           }
           
           .comment-heading {
             font-weight: 600;
             color: var(--warning-color);
-            margin-bottom: 10px;
-          }
-          
-          .signature-image {
-            max-width: 100%;
-            max-height: 100px;
-            border-bottom: 1px solid #ccc;
-            margin-top: 10px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
           }
           
           @media print {
             body {
               background-color: white;
+              margin: 0;
+              padding: 0;
             }
             
             .container {
               box-shadow: none;
               margin: 0;
+              max-width: none;
             }
             
             .section {
               break-inside: avoid;
+              page-break-inside: avoid;
+              padding: 12px 32px;
+            }
+            
+            .header,
+            .complaint-number,
+            .section,
+            .signatures,
+            .footer {
+              margin: 0;
+              padding: 12px 32px;
+            }
+            
+            .info-grid {
+              gap: 8px;
+            }
+            
+            .signature-box {
+              box-shadow: none;
+              border: 1px solid var(--border-color);
+              padding: 8px;
             }
           }
         </style>
@@ -389,6 +366,10 @@ export const createComplaintReportTemplate = (data: any) => {
                 <div class="info-label">Assigned Date</div>
                 <div class="info-value">${assignDate || 'N/A'}</div>
               </div>
+              <div class="info-item">
+                <div class="info-label">Assigned Engineer</div>
+                <div class="info-value">${S_assignedengg || 'N/A'}</div>
+              </div>
             </div>
           </div>
           
@@ -397,11 +378,7 @@ export const createComplaintReportTemplate = (data: any) => {
             <div class="info-grid">
               <div class="info-item">
                 <div class="info-label">Fault Reported</div>
-                <div class="info-value">${faultReported || 'N/A'}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Type of Call</div>
-                <div class="info-value">${typeOfCall || 'N/A'}</div>
+                <div class="info-value">${S_SERVDT || 'N/A'}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Call Attended On</div>
@@ -449,6 +426,8 @@ export const createComplaintReportTemplate = (data: any) => {
                     'status-pending'
                   }">
                     ${workStatus || 'Pending'}
+                    ${workStatus?.toLowerCase().includes('complete') ? ' - Over' : ''}
+                    ${(!workStatus || workStatus?.toLowerCase().includes('pending')) ? ` - ${data.pendingReason || 'Pending'}` : ''}
                   </span>
                 </div>
               </div>
@@ -477,7 +456,7 @@ export const createComplaintReportTemplate = (data: any) => {
           <div class="signatures">
             <div class="signature-box">
               <div class="signature-label">Engineer's Signature</div>
-              <div class="signature-placeholder">Engineer's signature</div>
+              <div class="signature-placeholder">null</div>
             </div>
             <div class="signature-box">
               <div class="signature-label">Client's Signature</div>

@@ -33,6 +33,7 @@ export type RootStackParamList = {
     SYSTEM_NAME:string;
     username: string;
     password: string;
+    S_SERVDT: string;
   };
   
   // Manager Complaint Routes
